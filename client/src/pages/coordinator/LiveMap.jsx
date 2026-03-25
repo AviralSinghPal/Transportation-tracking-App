@@ -85,6 +85,7 @@ export default function LiveMap() {
   // UI state
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [selectedRide, setSelectedRide] = useState(null);
+  const [selectedTrip, setSelectedTrip] = useState(null);
   const [autoFollow, setAutoFollow] = useState(false);
   const [showTraffic, setShowTraffic] = useState(false);
   const [panelTab, setPanelTab] = useState('drivers');
@@ -130,6 +131,28 @@ export default function LiveMap() {
 
     apiFetch('/geofences')
       .then(data => setGeofences(Array.isArray(data) ? data.filter(g => g.active !== false) : []))
+      .catch(() => {});
+
+    // Load drivers with lastLocation so they show on map immediately (before socket broadcasts)
+    apiFetch('/drivers')
+      .then(drivers => {
+        const withLocation = {};
+        drivers.forEach(d => {
+          if (d.lastLocation?.lat && d.lastLocation?.lng) {
+            withLocation[d._id] = {
+              driverId: d._id,
+              name: d.name,
+              lat: d.lastLocation.lat,
+              lng: d.lastLocation.lng,
+              speed: 0,
+              heading: 0,
+              timestamp: d.lastLocation.updatedAt || new Date(),
+              offlineType: null
+            };
+          }
+        });
+        setDriverLocations(prev => ({ ...withLocation, ...prev }));
+      })
       .catch(() => {});
   }, [apiFetch]);
 
@@ -1025,19 +1048,62 @@ export default function LiveMap() {
                       Active Trips
                     </div>
                     <div style={{ overflowY: 'auto', maxHeight: 200 }}>
-                      {activeTrips.map(t => (
-                        <div key={t._id} style={{
-                          padding: '10px 16px', borderBottom: '1px solid var(--color-border-light)', fontSize: 13
-                        }}>
-                          <div style={{ fontWeight: 600 }}>{t.title}</div>
-                          <div style={{
-                            color: 'var(--color-text-secondary)', fontSize: 12,
-                            display: 'flex', alignItems: 'center', gap: 4, marginTop: 2
-                          }}>
-                            <Users size={11} /> {t.driver?.name || 'Unassigned'}
+                      {activeTrips.map(t => {
+                        const isSelected = selectedTrip?._id === t._id;
+                        const firstP = t.passengers?.[0];
+                        return (
+                          <div
+                            key={t._id}
+                            className={`livemap-driver-item ${isSelected ? 'selected' : ''}`}
+                            onClick={() => {
+                              if (isSelected) {
+                                setSelectedTrip(null);
+                                setSelectedRide(null);
+                                return;
+                              }
+                              setSelectedTrip(t);
+                              // Convert trip to ride-like object for the existing directions logic
+                              const rideView = {
+                                _id: t._id,
+                                pickupLocation: firstP?.pickupAddress || 'Unknown',
+                                dropoffLocation: firstP?.dropoffAddress || 'Unknown',
+                                pickupCoordinates: firstP?.pickupLat ? { lat: firstP.pickupLat, lng: firstP.pickupLng } : null,
+                                dropoffCoordinates: firstP?.dropoffLat ? { lat: firstP.dropoffLat, lng: firstP.dropoffLng } : null,
+                                assignedDriver: t.driver,
+                                assignedVehicle: t.vehicle,
+                                status: t.status,
+                                requester: { name: firstP?.name || t.title },
+                                stops: t.passengers?.slice(1).map((p, i) => ({
+                                  location: p.pickupAddress || p.dropoffAddress,
+                                  coordinates: p.pickupLat ? { lat: p.pickupLat, lng: p.pickupLng } : null,
+                                  action: 'both',
+                                  order: i
+                                })) || []
+                              };
+                              setSelectedRide(rideView);
+                              // Focus on driver if they have a location
+                              if (t.driver?._id && driverLocations[t.driver._id]) {
+                                const d = driverLocations[t.driver._id];
+                                mapRef.current?.panTo({ lat: d.lat, lng: d.lng });
+                              }
+                            }}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <div style={{ fontWeight: 600 }}>{t.title}</div>
+                            <div style={{
+                              color: 'var(--color-text-secondary)', fontSize: 12,
+                              display: 'flex', alignItems: 'center', gap: 4, marginTop: 2
+                            }}>
+                              <Users size={11} /> {t.driver?.name || 'Unassigned'}
+                            </div>
+                            {firstP && (
+                              <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', marginTop: 2 }}>
+                                {firstP.pickupAddress} → {firstP.dropoffAddress}
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </>
                 )}
