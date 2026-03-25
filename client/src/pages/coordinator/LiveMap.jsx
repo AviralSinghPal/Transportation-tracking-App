@@ -977,8 +977,94 @@ export default function LiveMap() {
           </div>
 
           <div className="livemap-panel-content">
-            {/* ── Drivers Tab ── */}
-            {panelTab === 'drivers' && (
+
+            {/* ── Focused Detail View (when a ride or trip is selected) ── */}
+            {(selectedRide || selectedTrip) && (
+              <div style={{ padding: 16 }}>
+                <button
+                  onClick={() => { setSelectedRide(null); setSelectedTrip(null); setSelectedDriver(null); setDirectionsResult(null); }}
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    color: 'var(--color-primary)', fontSize: 13, fontWeight: 600,
+                    padding: 0, marginBottom: 12
+                  }}
+                >
+                  ← Back to list
+                </button>
+
+                <div style={{ padding: 14, background: 'var(--color-gray-light)', borderRadius: 10 }}>
+                  <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>
+                    {selectedTrip?.title || selectedRide?.requester?.name || 'Selected Ride'}
+                  </div>
+
+                  {/* Driver */}
+                  {(selectedRide?.assignedDriver || selectedTrip?.driver) && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: 13 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#4f46e5', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
+                        {(selectedRide?.assignedDriver?.name || selectedTrip?.driver?.name || 'D').charAt(0)}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 600 }}>{selectedRide?.assignedDriver?.name || selectedTrip?.driver?.name}</div>
+                        {(selectedRide?.assignedDriver?.phone || selectedTrip?.driver?.phone) && (
+                          <div style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{selectedRide?.assignedDriver?.phone || selectedTrip?.driver?.phone}</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Vehicle */}
+                  {(selectedRide?.assignedVehicle || selectedTrip?.vehicle) && (
+                    <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <Car size={12} />
+                      {(selectedRide?.assignedVehicle?.name || selectedTrip?.vehicle?.name) || 'Vehicle'}
+                      {(selectedRide?.assignedVehicle?.licensePlate || selectedTrip?.vehicle?.licensePlate) &&
+                        ` (${selectedRide?.assignedVehicle?.licensePlate || selectedTrip?.vehicle?.licensePlate})`}
+                    </div>
+                  )}
+
+                  {/* Route */}
+                  <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#059669', flexShrink: 0 }} />
+                      <span>{selectedRide?.pickupLocation || 'Pickup'}</span>
+                    </div>
+                    {(selectedRide?.stops || []).filter(s => s.location).map((s, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--color-text-secondary)', paddingLeft: 2 }}>
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#f59e0b', flexShrink: 0 }} />
+                        <span>Stop: {s.location}</span>
+                      </div>
+                    ))}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#dc2626', flexShrink: 0 }} />
+                      <span>{selectedRide?.dropoffLocation || 'Dropoff'}</span>
+                    </div>
+                  </div>
+
+                  {/* Status */}
+                  <div style={{ marginTop: 10 }}>
+                    <span className={`livemap-ride-status ${selectedRide?.status || selectedTrip?.status || ''}`}>
+                      {selectedRide?.status || selectedTrip?.status || 'unknown'}
+                    </span>
+                  </div>
+
+                  {/* Passengers for trips */}
+                  {selectedTrip?.passengers?.length > 0 && (
+                    <div style={{ marginTop: 10, borderTop: '1px solid var(--color-border)', paddingTop: 8 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-secondary)', marginBottom: 4, textTransform: 'uppercase' }}>Passengers</div>
+                      {selectedTrip.passengers.map((p, i) => (
+                        <div key={i} style={{ fontSize: 12, padding: '3px 0', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <Users size={10} /> {p.name || 'Passenger'}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── Drivers Tab (hidden when something is selected) ── */}
+            {!selectedRide && !selectedTrip && panelTab === 'drivers' && (
               <>
                 {driverList.length === 0 ? (
                   <div style={{ padding: 24, textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: 13 }}>
@@ -1110,8 +1196,8 @@ export default function LiveMap() {
               </>
             )}
 
-            {/* ── Rides Tab ── */}
-            {panelTab === 'rides' && (
+            {/* ── Rides Tab (hidden when something is selected) ── */}
+            {!selectedRide && !selectedTrip && panelTab === 'rides' && (
               <>
                 {filteredRides.length === 0 ? (
                   <div style={{ padding: 24, textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: 13 }}>
