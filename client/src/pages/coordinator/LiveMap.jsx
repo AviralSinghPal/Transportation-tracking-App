@@ -1011,42 +1011,44 @@ export default function LiveMap() {
                     </div>
                   )}
 
-                  {/* Route */}
-                  <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#059669', flexShrink: 0 }} />
-                      <span>{selectedRide?.pickupLocation || 'Pickup'}</span>
-                    </div>
-                    {(selectedRide?.stops || []).filter(s => s.location).map((s, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--color-text-secondary)', paddingLeft: 2 }}>
-                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#f59e0b', flexShrink: 0 }} />
-                        <span>Stop: {s.location}</span>
+                  {/* Route: just pickup → dropoff, no duplicate stops */}
+                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#059669', flexShrink: 0 }} />
+                    <span style={{ flex: 1 }}>{selectedRide?.pickupLocation || 'Pickup'}</span>
+                  </div>
+                  {(() => {
+                    // Deduplicate stops: exclude ones matching pickup or dropoff
+                    const pickup = (selectedRide?.pickupLocation || '').toLowerCase();
+                    const dropoff = (selectedRide?.dropoffLocation || '').toLowerCase();
+                    const uniqueStops = (selectedRide?.stops || [])
+                      .filter(s => s.location && s.location.toLowerCase() !== pickup && s.location.toLowerCase() !== dropoff);
+                    return uniqueStops.length > 0 ? (
+                      <div style={{ marginLeft: 16, borderLeft: '2px dashed var(--color-border)', paddingLeft: 12, marginTop: 4, marginBottom: 4 }}>
+                        <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', marginBottom: 2 }}>{uniqueStops.length} stop{uniqueStops.length > 1 ? 's' : ''}</div>
+                        {uniqueStops.map((s, i) => (
+                          <div key={i} style={{ fontSize: 12, color: 'var(--color-text-secondary)', padding: '2px 0' }}>
+                            {s.location}
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#dc2626', flexShrink: 0 }} />
-                      <span>{selectedRide?.dropoffLocation || 'Dropoff'}</span>
-                    </div>
+                    ) : <div style={{ marginLeft: 16, borderLeft: '2px dashed var(--color-border)', height: 16 }} />;
+                  })()}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#dc2626', flexShrink: 0 }} />
+                    <span style={{ flex: 1 }}>{selectedRide?.dropoffLocation || 'Dropoff'}</span>
                   </div>
 
-                  {/* Status */}
-                  <div style={{ marginTop: 10 }}>
+                  {/* Status + Passengers inline */}
+                  <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <span className={`livemap-ride-status ${selectedRide?.status || selectedTrip?.status || ''}`}>
                       {selectedRide?.status || selectedTrip?.status || 'unknown'}
                     </span>
+                    {selectedTrip?.passengers?.length > 0 && (
+                      <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                        <Users size={11} style={{ verticalAlign: '-1px' }} /> {selectedTrip.passengers.map(p => p.name).join(', ')}
+                      </span>
+                    )}
                   </div>
-
-                  {/* Passengers for trips */}
-                  {selectedTrip?.passengers?.length > 0 && (
-                    <div style={{ marginTop: 10, borderTop: '1px solid var(--color-border)', paddingTop: 8 }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-secondary)', marginBottom: 4, textTransform: 'uppercase' }}>Passengers</div>
-                      {selectedTrip.passengers.map((p, i) => (
-                        <div key={i} style={{ fontSize: 12, padding: '3px 0', display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <Users size={10} /> {p.name || 'Passenger'}
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
             )}
