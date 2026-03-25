@@ -1,0 +1,11 @@
+{
+  "name": "transporthq",
+  "version": "1.0.0",
+  "description": "Production transportation management platform",
+  "scripts": {
+    "install:all": "cd server && npm install && cd ../client && npm install",
+    "build": "cd client && npm install && npx vite build",
+    "start": "cd server && node index.js",
+    "seed": "cd server && node seed.js"
+  }
+}

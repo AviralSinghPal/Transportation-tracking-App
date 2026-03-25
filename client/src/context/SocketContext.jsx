@@ -19,7 +19,8 @@ export function SocketProvider({ children }) {
   useEffect(() => {
     if (!token || !user) return;
 
-    const newSocket = io('http://localhost:5001', {
+    const socketUrl = import.meta.env.VITE_SOCKET_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5001' : window.location.origin);
+    const newSocket = io(socketUrl, {
       auth: { token }
     });
 
