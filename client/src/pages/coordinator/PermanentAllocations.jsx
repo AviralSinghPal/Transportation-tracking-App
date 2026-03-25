@@ -311,28 +311,28 @@ export default function PermanentAllocations() {
 
       {/* Stats Row */}
       <div className="grid-4" style={{ marginBottom: 24 }}>
-        <div className="stat-card">
+        <div className="stat-card" onClick={() => setTab('active')} style={{ cursor: 'pointer' }}>
           <div className="stat-icon" style={{ background: 'var(--color-green-light)', color: 'var(--color-green)' }}>
             <Play size={20} />
           </div>
           <div className="stat-value" style={{ color: 'var(--color-green)' }}>{activeCount}</div>
           <div className="stat-label">Active</div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card" onClick={() => setTab('draft')} style={{ cursor: 'pointer' }}>
           <div className="stat-icon" style={{ background: '#f1f5f9', color: 'var(--color-gray)' }}>
             <FileText size={20} />
           </div>
           <div className="stat-value">{draftCount}</div>
           <div className="stat-label">Drafts</div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card" onClick={() => setTab('paused')} style={{ cursor: 'pointer' }}>
           <div className="stat-icon" style={{ background: 'var(--color-yellow-light)', color: 'var(--color-yellow)' }}>
             <Pause size={20} />
           </div>
           <div className="stat-value" style={{ color: 'var(--color-yellow)' }}>{pausedCount}</div>
           <div className="stat-label">Paused</div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card" onClick={() => setTab('all')} style={{ cursor: 'pointer' }}>
           <div className="stat-icon" style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}>
             <UserCheck size={20} />
           </div>

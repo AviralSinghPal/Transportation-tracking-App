@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   FileText, Calendar, Clock, DollarSign, Truck, TrendingUp,
@@ -23,6 +24,7 @@ const tabs = [
 
 export default function Reports() {
   const { apiFetch } = useAuth();
+  const navigate = useNavigate();
   const [tab, setTab] = useState('daily');
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
@@ -86,22 +88,22 @@ export default function Reports() {
     return (
       <>
         <div className="grid-4" style={{ marginBottom: 24 }}>
-          <div className="stat-card">
+          <div className="stat-card" onClick={() => navigate('/analytics')} style={{ cursor: 'pointer' }}>
             <div className="stat-icon" style={{ background: '#eef2ff' }}><BarChart3 size={20} color="var(--color-primary)" /></div>
             <div className="stat-value">{s.totalTrips}</div>
             <div className="stat-label">Total Trips</div>
           </div>
-          <div className="stat-card">
+          <div className="stat-card" onClick={() => navigate('/analytics')} style={{ cursor: 'pointer' }}>
             <div className="stat-icon" style={{ background: '#ecfdf5' }}><Users size={20} color="var(--color-green)" /></div>
             <div className="stat-value">{s.totalPassengers}</div>
             <div className="stat-label">Passengers</div>
           </div>
-          <div className="stat-card">
+          <div className="stat-card" onClick={() => navigate('/analytics')} style={{ cursor: 'pointer' }}>
             <div className="stat-icon" style={{ background: '#fffbeb' }}><Truck size={20} color="var(--color-yellow)" /></div>
             <div className="stat-value">{s.vehiclesInUse}/{s.vehiclesInUse + s.vehiclesAvailable}</div>
             <div className="stat-label">Vehicles In Use</div>
           </div>
-          <div className="stat-card">
+          <div className="stat-card" onClick={() => navigate('/analytics')} style={{ cursor: 'pointer' }}>
             <div className="stat-icon" style={{ background: '#fef2f2' }}><DollarSign size={20} color="var(--color-red)" /></div>
             <div className="stat-value">${s.totalCost?.toFixed(0) || 0}</div>
             <div className="stat-label">Total Cost</div>
@@ -242,17 +244,17 @@ export default function Reports() {
     return (
       <>
         <div className="grid-3" style={{ marginBottom: 24 }}>
-          <div className="stat-card">
+          <div className="stat-card" onClick={() => navigate('/analytics')} style={{ cursor: 'pointer' }}>
             <div className="stat-icon" style={{ background: '#ecfdf5' }}><CheckCircle2 size={20} color="var(--color-green)" /></div>
             <div className="stat-value" style={{ color: 'var(--color-green)' }}>{data.onTimeRate}%</div>
             <div className="stat-label">On-Time Rate</div>
           </div>
-          <div className="stat-card">
+          <div className="stat-card" onClick={() => navigate('/analytics')} style={{ cursor: 'pointer' }}>
             <div className="stat-icon" style={{ background: '#ecfdf5' }}><Timer size={20} color="var(--color-green)" /></div>
             <div className="stat-value">{data.onTime}</div>
             <div className="stat-label">On Time</div>
           </div>
-          <div className="stat-card">
+          <div className="stat-card" onClick={() => navigate('/analytics')} style={{ cursor: 'pointer' }}>
             <div className="stat-icon" style={{ background: '#fef2f2' }}><AlertTriangle size={20} color="var(--color-red)" /></div>
             <div className="stat-value">{data.late}</div>
             <div className="stat-label">Late</div>
@@ -296,22 +298,22 @@ export default function Reports() {
     return (
       <>
         <div className="grid-4" style={{ marginBottom: 24 }}>
-          <div className="stat-card">
+          <div className="stat-card" onClick={() => navigate('/analytics')} style={{ cursor: 'pointer' }}>
             <div className="stat-icon" style={{ background: '#eef2ff' }}><DollarSign size={20} color="var(--color-primary)" /></div>
             <div className="stat-value">${data.totalCost}</div>
             <div className="stat-label">Total Cost</div>
           </div>
-          <div className="stat-card">
+          <div className="stat-card" onClick={() => navigate('/analytics')} style={{ cursor: 'pointer' }}>
             <div className="stat-icon" style={{ background: '#ecfdf5' }}><TrendingUp size={20} color="var(--color-green)" /></div>
             <div className="stat-value">${data.costPerTrip}</div>
             <div className="stat-label">Cost/Trip</div>
           </div>
-          <div className="stat-card">
+          <div className="stat-card" onClick={() => navigate('/analytics')} style={{ cursor: 'pointer' }}>
             <div className="stat-icon" style={{ background: '#fffbeb' }}><Truck size={20} color="var(--color-yellow)" /></div>
             <div className="stat-value">${data.costPerMile}</div>
             <div className="stat-label">Cost/Mile</div>
           </div>
-          <div className="stat-card">
+          <div className="stat-card" onClick={() => navigate('/analytics')} style={{ cursor: 'pointer' }}>
             <div className="stat-icon" style={{ background: '#f1f5f9' }}><BarChart3 size={20} color="var(--color-text-secondary)" /></div>
             <div className="stat-value">{data.totalMileage}</div>
             <div className="stat-label">Total Miles</div>
@@ -359,17 +361,17 @@ export default function Reports() {
     return (
       <>
         <div className="grid-3" style={{ marginBottom: 24 }}>
-          <div className="stat-card">
+          <div className="stat-card" onClick={() => navigate('/analytics')} style={{ cursor: 'pointer' }}>
             <div className="stat-icon" style={{ background: '#fef2f2' }}><AlertTriangle size={20} color="var(--color-red)" /></div>
             <div className="stat-value" style={{ color: 'var(--color-red)' }}>{data.totalOTHours}h</div>
             <div className="stat-label">Total OT Hours</div>
           </div>
-          <div className="stat-card">
+          <div className="stat-card" onClick={() => navigate('/analytics')} style={{ cursor: 'pointer' }}>
             <div className="stat-icon" style={{ background: '#fffbeb' }}><Calendar size={20} color="var(--color-yellow)" /></div>
             <div className="stat-value">{data.totalOTDays}</div>
             <div className="stat-label">Days with OT</div>
           </div>
-          <div className="stat-card">
+          <div className="stat-card" onClick={() => navigate('/analytics')} style={{ cursor: 'pointer' }}>
             <div className="stat-icon" style={{ background: '#eef2ff' }}><Users size={20} color="var(--color-primary)" /></div>
             <div className="stat-value">{data.driverBreakdown?.length || 0}</div>
             <div className="stat-label">Drivers with OT</div>
