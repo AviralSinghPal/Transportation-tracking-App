@@ -73,21 +73,21 @@ export default function Dashboard() {
           <div className="stat-value" style={{ color: stats.pendingRides > 0 ? '#d97706' : 'var(--color-text)' }}>{stats.pendingRides}</div>
           <div className="stat-label">Pending Rides</div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card" onClick={() => navigate('/trips')} style={{ cursor: 'pointer' }}>
           <div className="stat-icon" style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}>
             <Route size={20} />
           </div>
           <div className="stat-value">{stats.total}</div>
           <div className="stat-label">Total Trips</div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card" onClick={() => navigate('/map')} style={{ cursor: 'pointer' }}>
           <div className="stat-icon" style={{ background: 'var(--color-yellow-light)', color: 'var(--color-yellow)' }}>
             <Loader size={20} />
           </div>
           <div className="stat-value" style={{ color: 'var(--color-yellow)' }}>{stats.inProgress + stats.activeRides}</div>
           <div className="stat-label">In Progress</div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card" onClick={() => navigate('/trips')} style={{ cursor: 'pointer' }}>
           <div className="stat-icon" style={{ background: 'var(--color-green-light)', color: 'var(--color-green)' }}>
             <CheckCircle2 size={20} />
           </div>

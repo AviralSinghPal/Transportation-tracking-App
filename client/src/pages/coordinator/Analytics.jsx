@@ -50,22 +50,22 @@ function OverviewTab() {
   return (
     <>
       <div className="grid-4" style={{ marginBottom: 32 }}>
-        <div className="stat-card">
+        <div className="stat-card" style={{ cursor: 'pointer' }}>
           <div className="stat-icon" style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}><BarChart3 size={20} /></div>
           <div className="stat-value">{overview.totalTrips}</div>
           <div className="stat-label">Total Trips</div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card" style={{ cursor: 'pointer' }}>
           <div className="stat-icon" style={{ background: 'var(--color-green-light)', color: 'var(--color-green)' }}><TrendingUp size={20} /></div>
           <div className="stat-value" style={{ color: 'var(--color-green)' }}>{overview.completionRate}%</div>
           <div className="stat-label">Completion Rate</div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card" style={{ cursor: 'pointer' }}>
           <div className="stat-icon" style={{ background: 'var(--color-yellow-light)', color: 'var(--color-yellow)' }}><DollarSign size={20} /></div>
           <div className="stat-value" style={{ color: 'var(--color-yellow)' }}>${overview.totalCost.toLocaleString()}</div>
           <div className="stat-label">Total Cost</div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card" style={{ cursor: 'pointer' }}>
           <div className="stat-icon" style={{ background: 'var(--color-blue-light)', color: 'var(--color-blue)' }}><Fuel size={20} /></div>
           <div className="stat-value" style={{ color: 'var(--color-blue)' }}>{overview.totalMileage.toLocaleString()}</div>
           <div className="stat-label">Total Miles</div>

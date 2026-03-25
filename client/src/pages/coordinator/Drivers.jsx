@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Phone, CreditCard, CalendarDays, Users, UserCheck, UserX, X, Link2, Unlink, ArrowRightLeft, PhoneCall, Car, Shield, AlertTriangle } from 'lucide-react';
 import StatusBadge from '../../components/StatusBadge';
@@ -6,6 +7,7 @@ import './Drivers.css';
 
 export default function Drivers() {
   const { apiFetch } = useAuth();
+  const navigate = useNavigate();
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -172,17 +174,17 @@ export default function Drivers() {
       {tab === 'drivers' && (
         <>
           <div className="grid-3" style={{ marginBottom: 24 }}>
-            <div className="stat-card">
+            <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => setTab('drivers')}>
               <div className="stat-icon" style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}><Users size={20} /></div>
               <div className="stat-value">{drivers.length}</div>
               <div className="stat-label">Total Drivers</div>
             </div>
-            <div className="stat-card">
+            <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => setTab('drivers')}>
               <div className="stat-icon" style={{ background: 'var(--color-green-light)', color: 'var(--color-green)' }}><UserCheck size={20} /></div>
               <div className="stat-value" style={{ color: 'var(--color-green)' }}>{available.length}</div>
               <div className="stat-label">Available</div>
             </div>
-            <div className="stat-card">
+            <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => navigate('/map')}>
               <div className="stat-icon" style={{ background: '#f1f5f9', color: 'var(--color-gray)' }}><UserX size={20} /></div>
               <div className="stat-value" style={{ color: 'var(--color-gray)' }}>{unavailable.length}</div>
               <div className="stat-label">Unavailable</div>

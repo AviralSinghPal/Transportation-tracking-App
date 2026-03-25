@@ -153,22 +153,22 @@ export default function Shuttles() {
 
       {/* Stats */}
       <div className="grid-4" style={{ marginBottom: 24 }}>
-        <div className="stat-card">
+        <div className="stat-card" onClick={() => setTab('routes')} style={{ cursor: 'pointer' }}>
           <div className="stat-icon" style={{ background: '#eef2ff' }}><Route size={20} color="var(--color-primary)" /></div>
           <div className="stat-value">{routes.length}</div>
           <div className="stat-label">Total Routes</div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card" onClick={() => setTab('routes')} style={{ cursor: 'pointer' }}>
           <div className="stat-icon" style={{ background: '#ecfdf5' }}><Play size={20} color="var(--color-green)" /></div>
           <div className="stat-value">{activeRoutes.length}</div>
           <div className="stat-label">Active</div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card" onClick={() => setTab('schedule')} style={{ cursor: 'pointer' }}>
           <div className="stat-icon" style={{ background: '#fffbeb' }}><Bus size={20} color="var(--color-yellow)" /></div>
           <div className="stat-value">{schedule.filter(r => ['boarding', 'in-transit'].includes(r.status)).length}</div>
           <div className="stat-label">Running Now</div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card" onClick={() => setTab('schedule')} style={{ cursor: 'pointer' }}>
           <div className="stat-icon" style={{ background: '#f1f5f9' }}><Users size={20} color="var(--color-text-secondary)" /></div>
           <div className="stat-value">{schedule.reduce((s, r) => s + (r.occupancy || 0), 0)}</div>
           <div className="stat-label">Passengers Today</div>

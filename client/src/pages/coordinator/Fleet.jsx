@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Car, Truck as TruckIcon, Bus, X, Wrench, CheckCircle2, Trash2 } from 'lucide-react';
 import StatusBadge from '../../components/StatusBadge';
@@ -8,6 +9,7 @@ const vehicleIcons = { car: Car, van: TruckIcon, suv: Car, minibus: Bus, shuttle
 
 export default function Fleet() {
   const { apiFetch } = useAuth();
+  const navigate = useNavigate();
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -72,28 +74,28 @@ export default function Fleet() {
       </div>
 
       <div className="fleet-stats" style={{ marginBottom: 24 }}>
-        <div className="stat-card">
+        <div className="stat-card" style={{ cursor: 'default' }}>
           <div className="stat-icon" style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}>
             <TruckIcon size={20} />
           </div>
           <div className="stat-value">{vehicles.length}</div>
           <div className="stat-label">Total</div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card" style={{ cursor: 'default' }}>
           <div className="stat-icon" style={{ background: 'var(--color-green-light)', color: 'var(--color-green)' }}>
             <CheckCircle2 size={20} />
           </div>
           <div className="stat-value" style={{ color: 'var(--color-green)' }}>{vehicles.filter(v => v.status === 'available').length}</div>
           <div className="stat-label">Available</div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card" onClick={() => navigate('/map')} style={{ cursor: 'pointer' }}>
           <div className="stat-icon" style={{ background: 'var(--color-yellow-light)', color: 'var(--color-yellow)' }}>
             <Car size={20} />
           </div>
           <div className="stat-value" style={{ color: 'var(--color-yellow)' }}>{vehicles.filter(v => v.status === 'in-use').length}</div>
           <div className="stat-label">In Use</div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card" onClick={() => navigate('/maintenance')} style={{ cursor: 'pointer' }}>
           <div className="stat-icon" style={{ background: 'var(--color-red-light)', color: 'var(--color-red)' }}>
             <Wrench size={20} />
           </div>

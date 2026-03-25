@@ -442,56 +442,44 @@ export default function LiveMap() {
   }
 
   async function focusRide(ride) {
-    setSelectedRide(ride);
     setSelectedDriver(null);
     if (!mapRef.current) return;
 
     const bounds = new window.google.maps.LatLngBounds();
     let hasPoints = false;
 
-    // Try explicit coordinates first, then geocode text addresses
-    const tryExtend = (loc) => {
-      if (!loc) return;
-      if (typeof loc === 'object' && loc.lat != null) {
-        bounds.extend({ lat: loc.lat, lng: loc.lng || loc.lon });
-        hasPoints = true;
-      }
+    // Resolve pickup coordinates: explicit coords or geocode
+    let pickupCoord = ride.pickupCoordinates && ride.pickupCoordinates.lat
+      ? { lat: ride.pickupCoordinates.lat, lng: ride.pickupCoordinates.lng }
+      : await geocodeAddress(ride.pickupLocation);
+
+    // Resolve dropoff coordinates
+    let dropoffCoord = ride.dropoffCoordinates && ride.dropoffCoordinates.lat
+      ? { lat: ride.dropoffCoordinates.lat, lng: ride.dropoffCoordinates.lng }
+      : await geocodeAddress(ride.dropoffLocation);
+
+    if (pickupCoord) { bounds.extend(pickupCoord); hasPoints = true; }
+    if (dropoffCoord) { bounds.extend(dropoffCoord); hasPoints = true; }
+
+    // Geocode stops
+    const stopsWithCoords = await Promise.all(
+      (ride.stops || []).map(async (stop) => {
+        const coord = stop.coordinates?.lat
+          ? { lat: stop.coordinates.lat, lng: stop.coordinates.lng }
+          : await geocodeAddress(stop.location);
+        if (coord) { bounds.extend(coord); hasPoints = true; }
+        return { ...stop, _coord: coord };
+      })
+    );
+
+    // Always set _pickupCoord and _dropoffCoord so directions effect fires
+    const enrichedRide = {
+      ...ride,
+      _pickupCoord: pickupCoord,
+      _dropoffCoord: dropoffCoord,
+      stops: stopsWithCoords
     };
-
-    tryExtend(ride.pickupCoordinates);
-    tryExtend(ride.dropoffCoordinates);
-
-    // If no coordinates, geocode the text addresses
-    if (!hasPoints) {
-      const [pickupCoord, dropoffCoord] = await Promise.all([
-        geocodeAddress(ride.pickupLocation),
-        geocodeAddress(ride.dropoffLocation)
-      ]);
-
-      if (pickupCoord) {
-        bounds.extend(pickupCoord);
-        hasPoints = true;
-        ride._pickupCoord = pickupCoord; // cache on the ride object
-      }
-      if (dropoffCoord) {
-        bounds.extend(dropoffCoord);
-        hasPoints = true;
-        ride._dropoffCoord = dropoffCoord;
-      }
-
-      // Geocode stops too
-      const stopsWithCoords = await Promise.all(
-        (ride.stops || []).map(async (stop) => {
-          const coord = await geocodeAddress(stop.location);
-          return { ...stop, _coord: coord };
-        })
-      );
-
-      // Update selectedRide with coords so markers/directions can render
-      if (pickupCoord || dropoffCoord) {
-        setSelectedRide({ ...ride, _pickupCoord: pickupCoord, _dropoffCoord: dropoffCoord, stops: stopsWithCoords });
-      }
-    }
+    setSelectedRide(enrichedRide);
 
     if (hasPoints) {
       mapRef.current.fitBounds(bounds, 80);
@@ -1148,7 +1136,7 @@ export default function LiveMap() {
                                 return;
                               }
                               setSelectedTrip(t);
-                              // Convert trip to ride-like object for the existing directions logic
+                              // Convert trip to ride-like object and use focusRide for geocoding + directions
                               const rideView = {
                                 _id: t._id,
                                 pickupLocation: firstP?.pickupAddress || 'Unknown',
@@ -1166,12 +1154,7 @@ export default function LiveMap() {
                                   order: i
                                 })) || []
                               };
-                              setSelectedRide(rideView);
-                              // Focus on driver if they have a location
-                              if (t.driver?._id && driverLocations[t.driver._id]) {
-                                const d = driverLocations[t.driver._id];
-                                mapRef.current?.panTo({ lat: d.lat, lng: d.lng });
-                              }
+                              focusRide(rideView);
                             }}
                             style={{ cursor: 'pointer' }}
                           >

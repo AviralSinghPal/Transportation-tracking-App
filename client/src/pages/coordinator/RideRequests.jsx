@@ -247,22 +247,22 @@ export default function RideRequests() {
 
       {/* Stats */}
       <div className="grid-4" style={{ marginBottom: 24 }}>
-        <div className="stat-card">
+        <div className="stat-card" onClick={() => setTab('pending')} style={{ cursor: 'pointer' }}>
           <div className="stat-icon" style={{ background: '#fffbeb' }}><AlertTriangle size={20} color="var(--color-yellow)" /></div>
           <div className="stat-value">{requests.filter(r => r.status === 'pending').length}</div>
           <div className="stat-label">Pending</div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card" onClick={() => setTab('active')} style={{ cursor: 'pointer' }}>
           <div className="stat-icon" style={{ background: '#eef2ff' }}><Car size={20} color="var(--color-primary)" /></div>
           <div className="stat-value">{requests.filter(r => ['assigned', 'in-progress'].includes(r.status)).length}</div>
           <div className="stat-label">Active</div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card" onClick={() => setTab('pending')} style={{ cursor: 'pointer' }}>
           <div className="stat-icon" style={{ background: '#fef2f2' }}><Timer size={20} color="var(--color-red)" /></div>
           <div className="stat-value">{requests.filter(r => r.priority === 'urgent' && r.status === 'pending').length}</div>
           <div className="stat-label">Urgent</div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card" onClick={() => setTab('completed')} style={{ cursor: 'pointer' }}>
           <div className="stat-icon" style={{ background: '#ecfdf5' }}><CheckCircle2 size={20} color="var(--color-green)" /></div>
           <div className="stat-value">{requests.filter(r => r.status === 'completed').length}</div>
           <div className="stat-label">Completed Today</div>
