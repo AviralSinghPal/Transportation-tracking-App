@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { SkeletonPage } from '../../components/Skeleton';
 import RideRequestModal from '../../components/RideRequestModal';
+import RepeatScheduleModal from '../../components/RepeatScheduleModal';
 
 const priorityConfig = {
   urgent: { color: 'var(--color-red)', bg: '#fef2f2', label: 'Urgent', icon: AlertTriangle },
@@ -773,9 +774,12 @@ export default function RideRequests() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {activeCars.map(car => {
+                    const vehicle = car.assignedVehicle || car.vehicle;
+                    const driver = car.assignedDriver || car.driver;
+                    const capacity = car.vehicleCapacity || vehicle?.capacity || '?';
                     const carSeats = car.availableSeats != null
-                      ? { available: car.availableSeats, total: car.vehicle?.capacity || '?' }
-                      : { available: '?', total: car.vehicle?.capacity || '?' };
+                      ? { available: car.availableSeats, total: capacity }
+                      : { available: '?', total: capacity };
                     return (
                       <div key={car._id || car.rideId} style={{
                         padding: 12, background: 'var(--color-gray-light)',
@@ -785,8 +789,8 @@ export default function RideRequests() {
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <Car size={16} color="var(--color-primary)" />
                             <strong style={{ fontSize: 14 }}>
-                              {car.vehicle?.name || car.vehicleName || 'Vehicle'}
-                              {car.vehicle?.licensePlate && ` (${car.vehicle.licensePlate})`}
+                              {vehicle?.name || 'Vehicle'}
+                              {vehicle?.licensePlate && ` (${vehicle.licensePlate})`}
                             </strong>
                           </div>
                           <span style={{
@@ -797,17 +801,15 @@ export default function RideRequests() {
                             {carSeats.available}/{carSeats.total} seats
                           </span>
                         </div>
-                        {car.driver && (
+                        {driver && (
                           <div style={{ fontSize: 13, marginBottom: 4, color: 'var(--color-text-secondary)' }}>
-                            Driver: <strong>{car.driver.name || car.driverName}</strong>
+                            Driver: <strong>{driver.name || 'Unassigned'}</strong>
                           </div>
                         )}
-                        {(car.route || car.pickupLocation) && (
-                          <div style={{ fontSize: 13, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <MapPin size={12} color="var(--color-green)" />
-                            {car.route || `${car.pickupLocation} → ${car.dropoffLocation}`}
-                          </div>
-                        )}
+                        <div style={{ fontSize: 13, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <MapPin size={12} color="var(--color-green)" />
+                          {car.pickupLocation} → {car.dropoffLocation}
+                        </div>
                         <button
                           className="btn btn-secondary btn-sm"
                           style={{ marginTop: 4 }}
@@ -891,6 +893,11 @@ export default function RideRequests() {
       {/* New Request Modal */}
       {showModal && (
         <RideRequestModal onClose={() => setShowModal(false)} onCreated={loadData} />
+      )}
+
+      {/* Repeat Schedule Modal */}
+      {showRepeat && (
+        <RepeatScheduleModal onClose={() => setShowRepeat(false)} onCreated={loadData} />
       )}
     </div>
   );
