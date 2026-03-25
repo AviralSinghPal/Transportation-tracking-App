@@ -1,0 +1,74 @@
+.trip-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.passenger-item {
+  padding: 12px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+}
+
+.passenger-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.passenger-stops {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+/* Timeline */
+.timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline-item {
+  display: flex;
+  position: relative;
+  padding-bottom: 20px;
+}
+
+.timeline-item:last-child { padding-bottom: 0; }
+
+.timeline-dot {
+  width: 12px;
+  height: 12px;
+  background: var(--color-primary);
+  border-radius: 50%;
+  margin-right: 16px;
+  margin-top: 4px;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.timeline-line {
+  position: absolute;
+  left: 5px;
+  top: 16px;
+  bottom: 0;
+  width: 2px;
+  background: var(--color-border);
+}
+
+.timeline-content { flex: 1; }
+
+.timeline-event {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.timeline-time {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}

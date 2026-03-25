@@ -1,0 +1,61 @@
+.fleet-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.vehicle-card { display: flex; flex-direction: column; gap: 8px; }
+
+.vehicle-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vehicle-icon-wrap {
+  width: 44px;
+  height: 44px;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vehicle-name { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+
+.vehicle-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.vehicle-meta-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--color-text-tertiary);
+}
+
+.vehicle-notes {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.vehicle-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 1024px) {
+  .fleet-stats { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  .fleet-stats { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,438 @@
+.driver-map-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 64px);
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── HUD bar ── */
+.driver-map-hud {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--card-bg, #fff);
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.hud-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text, #1e293b);
+}
+
+.hud-speed {
+  cursor: pointer;
+  user-select: none;
+  background: var(--bg-secondary, #f1f5f9);
+  padding: 6px 12px;
+  border-radius: 8px;
+  min-width: 90px;
+  justify-content: center;
+}
+
+.hud-speed-value {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--primary, #6366f1);
+}
+
+.hud-speed-unit {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted, #94a3b8);
+  align-self: flex-end;
+  margin-bottom: 2px;
+}
+
+.hud-compass {
+  background: var(--bg-secondary, #f1f5f9);
+  padding: 6px 10px;
+  border-radius: 8px;
+  gap: 4px;
+}
+
+.compass-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+  color: var(--text, #1e293b);
+}
+
+.compass-direction {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted, #94a3b8);
+  min-width: 20px;
+  text-align: center;
+}
+
+.hud-location-status {
+  margin-left: auto;
+}
+
+.location-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: none;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.location-toggle-btn.active {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.location-toggle-btn.active:hover {
+  background: #bbf7d0;
+}
+
+.location-toggle-btn.inactive {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.location-toggle-btn.inactive:hover {
+  background: #fecaca;
+}
+
+.hud-nav-btn {
+  background: var(--primary, #6366f1);
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.hud-nav-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* ── Map container ── */
+.driver-map-container {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+}
+
+.driver-map-geo-error {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Active ride card (bottom) ── */
+.driver-map-ride-card {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: var(--card-bg, #fff);
+  border-top: 1px solid var(--border, #e2e8f0);
+  padding: 14px 18px;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.ride-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.ride-card-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+  color: var(--text, #1e293b);
+}
+
+.ride-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ride-status-dot.status-assigned {
+  background: #f59e0b;
+}
+
+.ride-status-dot.status-driver-departed {
+  background: #3b82f6;
+}
+
+.ride-status-dot.status-arrived-pickup {
+  background: #8b5cf6;
+}
+
+.ride-status-dot.status-in-progress {
+  background: #22c55e;
+  animation: pulse-dot 1.5s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.ride-status-text {
+  text-transform: capitalize;
+}
+
+.ride-card-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: var(--bg-secondary, #f1f5f9);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 6px;
+  color: var(--primary, #6366f1);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ride-card-nav-btn:hover {
+  background: var(--primary, #6366f1);
+  color: #fff;
+  border-color: var(--primary, #6366f1);
+}
+
+.ride-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ride-card-passenger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text, #1e293b);
+}
+
+.ride-card-locations {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ride-card-location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary, #64748b);
+}
+
+.ride-card-location .pickup-icon {
+  color: #22c55e;
+  flex-shrink: 0;
+}
+
+.ride-card-location .dropoff-icon {
+  color: #ef4444;
+  flex-shrink: 0;
+}
+
+.ride-card-time {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-muted, #94a3b8);
+}
+
+/* ── No ride state ── */
+.driver-map-no-ride {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: var(--card-bg, #fff);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted, #94a3b8);
+  white-space: nowrap;
+}
+
+/* ── Rides list (multiple assignments) ── */
+.driver-map-rides-list {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9;
+  background: var(--card-bg, #fff);
+  border-top: 1px solid var(--border, #e2e8f0);
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* When both ride-card and rides-list exist, push rides-list above card */
+.driver-map-ride-card ~ .driver-map-rides-list {
+  bottom: auto;
+  top: auto;
+  position: relative;
+  border-top: none;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  box-shadow: none;
+}
+
+.rides-list-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 18px;
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text, #1e293b);
+  cursor: pointer;
+}
+
+.rides-list-toggle:hover {
+  background: var(--bg-secondary, #f8fafc);
+}
+
+.rides-list-items {
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 0 18px 10px;
+}
+
+.rides-list-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  margin-bottom: 4px;
+  background: var(--bg-secondary, #f8fafc);
+  transition: all 0.15s;
+}
+
+.rides-list-item.active {
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+}
+
+.rides-list-item:not(.active) {
+  border: 1px solid transparent;
+}
+
+.rides-list-item-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+  color: var(--text-secondary, #64748b);
+}
+
+.rides-list-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rides-list-item-passenger {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text, #1e293b);
+}
+
+.rides-list-item-route {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-secondary, #64748b);
+  flex-wrap: wrap;
+}
+
+.rides-list-item-route .pickup-icon {
+  color: #22c55e;
+}
+
+.rides-list-item-route .dropoff-icon {
+  color: #ef4444;
+}
+
+.rides-list-arrow {
+  color: var(--text-muted, #94a3b8);
+  font-size: 10px;
+}
+
+/* ── Dark mode overrides ── */
+[data-theme="dark"] .location-toggle-btn.active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+}
+
+[data-theme="dark"] .location-toggle-btn.inactive {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+[data-theme="dark"] .driver-map-geo-error {
+  background: #451a03;
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .rides-list-item.active {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+}

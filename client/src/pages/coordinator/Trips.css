@@ -1,0 +1,32 @@
+.trip-filters {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.filter-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--color-gray-light);
+  color: var(--color-text-secondary);
+  transition: all 0.15s;
+}
+
+.filter-pill:hover {
+  background: #e5e7eb;
+}
+
+.filter-pill.active {
+  background: var(--color-primary);
+  color: white;
+}
