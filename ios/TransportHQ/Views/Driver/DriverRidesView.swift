@@ -54,7 +54,7 @@ struct DriverRideCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(ride.passenger?.fullName ?? "Passenger")
+                Text(ride.displayPassenger?.fullName ?? "Passenger")
                     .font(Theme.subheadlineFont)
                     .foregroundColor(Theme.gray900)
                 Spacer()

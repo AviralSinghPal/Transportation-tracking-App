@@ -10,6 +10,9 @@ struct TransportHQApp: App {
         WindowGroup {
             ContentView()
                 .preferredColorScheme(.light)
+                .task {
+                    await AuthService.shared.autoLoginIfNeeded()
+                }
         }
     }
 

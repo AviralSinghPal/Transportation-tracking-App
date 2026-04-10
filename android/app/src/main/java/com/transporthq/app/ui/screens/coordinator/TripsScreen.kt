@@ -2,9 +2,12 @@ package com.transporthq.app.ui.screens.coordinator
 
 import android.app.Application
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -31,10 +34,12 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 data class CoordinatorTripsState(
+    val allTrips: List<Trip> = emptyList(),
     val trips: List<Trip> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
-    val selectedDate: String = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+    val selectedDate: String = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE),
+    val selectedFilter: String = "all"
 )
 
 class CoordinatorTripsViewModel(application: Application) : AndroidViewModel(application) {
@@ -53,7 +58,7 @@ class CoordinatorTripsViewModel(application: Application) : AndroidViewModel(app
             val result = tripRepository.getTrips(_state.value.selectedDate)
             result.fold(
                 onSuccess = { trips ->
-                    _state.value = _state.value.copy(trips = trips, isLoading = false)
+                    _state.value = _state.value.copy(allTrips = trips, trips = trips, isLoading = false)
                 },
                 onFailure = { error ->
                     _state.value = _state.value.copy(isLoading = false, error = error.message)
@@ -61,11 +66,25 @@ class CoordinatorTripsViewModel(application: Application) : AndroidViewModel(app
             )
         }
     }
+
+    fun setFilter(filter: String) {
+        val allTrips = _state.value.allTrips
+        val filtered = when (filter) {
+            "unassigned" -> allTrips.filter { it.status == "unassigned" }
+            "assigned" -> allTrips.filter { it.status == "assigned" }
+            "in-progress" -> allTrips.filter { it.status in listOf("driver-departed", "arrived-pickup", "in-progress") }
+            "completed" -> allTrips.filter { it.status == "completed" }
+            else -> allTrips
+        }
+        _state.value = _state.value.copy(trips = filtered, selectedFilter = filter)
+    }
 }
 
 @Composable
 fun TripsScreen(
-    viewModel: CoordinatorTripsViewModel = viewModel()
+    viewModel: CoordinatorTripsViewModel = viewModel(),
+    onCreateTrip: (() -> Unit)? = null,
+    onTripClick: ((String) -> Unit)? = null
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -90,13 +109,48 @@ fun TripsScreen(
                     color = Gray900
                 )
                 Text(
-                    text = "${state.trips.size} trips today",
+                    text = "${state.trips.size} of ${state.allTrips.size} trips today",
                     fontSize = 14.sp,
                     color = Gray500
                 )
             }
-            IconButton(onClick = { viewModel.loadTrips() }) {
-                Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = Indigo600)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                IconButton(onClick = { viewModel.loadTrips() }) {
+                    Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = Indigo600)
+                }
+                if (onCreateTrip != null) {
+                    Button(
+                        onClick = onCreateTrip,
+                        colors = ButtonDefaults.buttonColors(containerColor = Indigo600),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("New Trip", fontSize = 13.sp)
+                    }
+                }
+            }
+        }
+
+        // Filter chips
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            listOf("all" to "All", "unassigned" to "Unassigned", "assigned" to "Assigned", "in-progress" to "In Progress", "completed" to "Completed").forEach { (value, label) ->
+                FilterChip(
+                    selected = state.selectedFilter == value,
+                    onClick = { viewModel.setFilter(value) },
+                    label = { Text(label, fontSize = 13.sp) },
+                    shape = RoundedCornerShape(20.dp),
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = Indigo600,
+                        selectedLabelColor = White
+                    )
+                )
             }
         }
 
@@ -129,7 +183,10 @@ fun TripsScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(state.trips) { trip ->
-                    CoordinatorTripCard(trip)
+                    CoordinatorTripCard(
+                        trip = trip,
+                        onClick = { onTripClick?.invoke(trip.id) }
+                    )
                 }
             }
         }
@@ -137,9 +194,9 @@ fun TripsScreen(
 }
 
 @Composable
-private fun CoordinatorTripCard(trip: Trip) {
+private fun CoordinatorTripCard(trip: Trip, onClick: () -> Unit = {}) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -183,7 +240,7 @@ private fun CoordinatorTripCard(trip: Trip) {
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(color = Gray200)
+            Divider(color = Gray200)
             Spacer(modifier = Modifier.height(12.dp))
 
             Row(verticalAlignment = Alignment.Top) {
@@ -197,8 +254,7 @@ private fun CoordinatorTripCard(trip: Trip) {
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = trip.pickupLocation?.address
-                                ?: trip.rideRequest?.pickupLocation?.address ?: "N/A",
+                            text = trip.displayPickup,
                             fontSize = 13.sp,
                             color = Gray700,
                             maxLines = 2
@@ -214,8 +270,7 @@ private fun CoordinatorTripCard(trip: Trip) {
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = trip.dropoffLocation?.address
-                                ?: trip.rideRequest?.dropoffLocation?.address ?: "N/A",
+                            text = trip.displayDropoff,
                             fontSize = 13.sp,
                             color = Gray700,
                             maxLines = 2

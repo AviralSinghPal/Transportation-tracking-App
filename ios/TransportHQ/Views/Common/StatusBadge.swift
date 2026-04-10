@@ -12,6 +12,8 @@ struct StatusBadge: View {
     init(tripStatus: TripStatus) {
         self.text = tripStatus.displayName
         switch tripStatus {
+        case .unassigned:
+            self.color = Theme.gray400
         case .assigned:
             self.color = Theme.blue
         case .driverDeparted:
@@ -43,6 +45,20 @@ struct StatusBadge: View {
         case .cancelled:
             self.color = Theme.gray400
         case .rejected:
+            self.color = Theme.red
+        }
+    }
+
+    init(vehicleStatus: VehicleStatus) {
+        self.text = vehicleStatus.displayName
+        switch vehicleStatus {
+        case .available:
+            self.color = Theme.green
+        case .inUse:
+            self.color = Theme.blue
+        case .maintenance:
+            self.color = Theme.orange
+        case .outOfService:
             self.color = Theme.red
         }
     }

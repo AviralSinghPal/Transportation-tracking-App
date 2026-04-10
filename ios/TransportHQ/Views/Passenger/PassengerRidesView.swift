@@ -7,6 +7,26 @@ struct PassengerRidesView: View {
         NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 12) {
+                    // PA Driver Card
+                    if viewModel.hasPADriver {
+                        HStack(spacing: 12) {
+                            ZStack {
+                                Circle().fill(Theme.green).frame(width: 44, height: 44)
+                                Image(systemName: "shield.fill").foregroundColor(.white).font(.system(size: 20))
+                            }
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("My Permanent Driver").font(.system(size: 11, weight: .medium)).foregroundColor(Theme.green)
+                                Text(viewModel.paDriverName).font(Theme.subheadlineFont).fontWeight(.bold).foregroundColor(Theme.gray900)
+                                Text(viewModel.paDriverPhone).font(Theme.captionFont).foregroundColor(Theme.gray500)
+                            }
+                            Spacer()
+                            StatusBadge("Available", color: Theme.green)
+                        }
+                        .padding(14)
+                        .background(Theme.green.opacity(0.06))
+                        .cornerRadius(12)
+                    }
+
                     if !viewModel.activeRides.isEmpty {
                         Text("Active Requests")
                             .font(Theme.headlineFont)
@@ -59,6 +79,7 @@ struct PassengerRidesView: View {
             }
             .task {
                 await viewModel.loadRides()
+                await viewModel.loadPADriver()
             }
             .sheet(isPresented: $viewModel.showCreateSheet) {
                 RideRequestSheet { pickup, dropoff, time, count, priority, dept, notes in
@@ -71,6 +92,11 @@ struct PassengerRidesView: View {
                         department: dept,
                         notes: notes
                     )
+                }
+            }
+            .onChange(of: viewModel.showCreateSheet) { newValue in
+                if !newValue {
+                    Task { await viewModel.loadRides() }
                 }
             }
             .overlay {
@@ -131,7 +157,7 @@ struct PassengerRideCard: View {
                     .lineLimit(1)
             }
 
-            if let driver = ride.driver {
+            if let driver = ride.displayDriver {
                 Divider()
                 HStack(spacing: 8) {
                     Circle()
@@ -146,7 +172,7 @@ struct PassengerRideCard: View {
                         Text(driver.fullName)
                             .font(Theme.captionFont)
                             .foregroundColor(Theme.gray800)
-                        if let vehicle = ride.vehicle {
+                        if let vehicle = ride.displayVehicle {
                             Text(vehicle.displayName)
                                 .font(Theme.smallFont)
                                 .foregroundColor(Theme.gray500)
@@ -154,7 +180,7 @@ struct PassengerRideCard: View {
                     }
                     Spacer()
 
-                    if let driverId = ride.driver?.id,
+                    if let driverId = ride.displayDriver?.id,
                        ride.status == .assigned || ride.status == .inProgress {
                         NavigationLink(destination: TrackDriverView(driverId: driverId, rideRequestId: ride.id)) {
                             HStack(spacing: 4) {

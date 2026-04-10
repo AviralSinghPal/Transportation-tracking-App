@@ -3,10 +3,38 @@ import SwiftUI
 struct ContentView: View {
     @ObservedObject private var authService = AuthService.shared
     @State private var selectedTab = 0
+    @State private var showNotifications = false
+    @State private var showChat = false
 
     var body: some View {
         if authService.isAuthenticated, let user = authService.currentUser {
             VStack(spacing: 0) {
+                // Top bar with notification bell
+                HStack {
+                    Text("TransportHQ")
+                        .font(.headline)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                    Spacer()
+                    Button {
+                        showChat = true
+                    } label: {
+                        Image(systemName: "message.fill")
+                            .foregroundColor(.white)
+                            .font(.system(size: 18))
+                    }
+                    Button {
+                        showNotifications = true
+                    } label: {
+                        Image(systemName: "bell.fill")
+                            .foregroundColor(.white)
+                            .font(.system(size: 18))
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(Theme.primary)
+
                 // Content based on role and tab
                 Group {
                     switch user.role {
@@ -25,6 +53,12 @@ struct ContentView: View {
             .ignoresSafeArea(.keyboard)
             .onAppear {
                 authService.restoreSession()
+            }
+            .sheet(isPresented: $showNotifications) {
+                NotificationsView()
+            }
+            .sheet(isPresented: $showChat) {
+                ChatView()
             }
         } else {
             LoginView()
@@ -48,7 +82,8 @@ struct ContentView: View {
         switch selectedTab {
         case 0: DriverTripsView()
         case 1: DriverRidesView()
-        case 2: MoreView()
+        case 2: DriverMapView()
+        case 3: MoreView()
         default: DriverTripsView()
         }
     }

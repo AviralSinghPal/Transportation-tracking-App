@@ -5,3 +5,20 @@ dist/
 *.log
 .DS_Store
 .vite/
+
+# Android
+android/.idea/
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+android/gradle/wrapper/gradle-wrapper.jar
+*.apk
+
+# iOS
+ios/TransportHQ/.build/
+ios/TransportHQ/.swiftpm/
+ios/TransportHQ/Package.resolved
+
+# Claude
+.claude/

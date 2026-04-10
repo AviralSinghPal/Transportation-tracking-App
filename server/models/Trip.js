@@ -21,7 +21,7 @@ const tripSchema = new mongoose.Schema({
   type: { type: String, enum: ['one-time', 'full-day', 'recurring'], default: 'one-time' },
   status: {
     type: String,
-    enum: ['unassigned', 'assigned', 'driver-departed', 'in-progress', 'completed', 'cancelled'],
+    enum: ['unassigned', 'assigned', 'driver-departed', 'arrived-pickup', 'in-progress', 'completed', 'cancelled'],
     default: 'unassigned'
   },
   passengers: [passengerStopSchema],

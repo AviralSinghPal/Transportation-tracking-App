@@ -3,8 +3,9 @@ import Foundation
 struct RideRequest: Codable, Identifiable {
     let id: String
     let passenger: TripPassenger?
-    let pickupLocation: TripLocation?
-    let dropoffLocation: TripLocation?
+    let requester: TripPassenger?
+    let pickupLocation: FlexLocation?
+    let dropoffLocation: FlexLocation?
     let pickupTime: String?
     let passengerCount: Int?
     let priority: RidePriority?
@@ -13,16 +14,47 @@ struct RideRequest: Codable, Identifiable {
     let notes: String?
     let driver: TripDriver?
     let vehicle: TripVehicle?
+    let assignedDriver: TripDriver?
+    let assignedVehicle: TripVehicle?
     let trip: String?
     let eta: String?
+    let isPACall: Bool?
+    let callType: String?
+    let isSharedRide: Bool?
     let createdAt: String?
     let updatedAt: String?
 
     enum CodingKeys: String, CodingKey {
         case id = "_id"
-        case passenger, pickupLocation, dropoffLocation, pickupTime
+        case passenger, requester, pickupLocation, dropoffLocation, pickupTime
         case passengerCount, priority, status, department, notes
-        case driver, vehicle, trip, eta, createdAt, updatedAt
+        case driver, vehicle, assignedDriver, assignedVehicle
+        case trip, eta, isPACall, callType, isSharedRide, createdAt, updatedAt
+    }
+
+    var displayPassenger: TripPassenger? { passenger ?? requester }
+    var displayDriver: TripDriver? { driver ?? assignedDriver }
+    var displayVehicle: TripVehicle? { vehicle ?? assignedVehicle }
+}
+
+// Handles both String and Object location formats from API
+struct FlexLocation: Codable {
+    let address: String
+    let coordinates: GeoPoint?
+
+    init(from decoder: Decoder) throws {
+        if let container = try? decoder.singleValueContainer(), let str = try? container.decode(String.self) {
+            self.address = str
+            self.coordinates = nil
+        } else {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            self.address = (try? container.decode(String.self, forKey: .address)) ?? ""
+            self.coordinates = try? container.decode(GeoPoint.self, forKey: .coordinates)
+        }
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case address, coordinates
     }
 }
 

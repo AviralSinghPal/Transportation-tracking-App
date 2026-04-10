@@ -206,7 +206,7 @@ struct ActiveTripCard: View {
                 Image(systemName: "mappin.circle.fill")
                     .foregroundColor(Theme.green)
                     .font(.system(size: 14))
-                Text(trip.pickupLocation?.address ?? trip.rideRequest?.pickupLocation?.address ?? "N/A")
+                Text(trip.displayPickup)
                     .font(Theme.captionFont)
                     .foregroundColor(Theme.gray600)
                     .lineLimit(1)

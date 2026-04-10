@@ -129,7 +129,7 @@ struct DriverTripCard: View {
                 Image(systemName: "mappin.circle.fill")
                     .foregroundColor(Theme.green)
                     .font(.system(size: 14))
-                Text(trip.pickupLocation?.address ?? trip.rideRequest?.pickupLocation?.address ?? "N/A")
+                Text(trip.displayPickup)
                     .font(Theme.captionFont)
                     .foregroundColor(Theme.gray600)
                     .lineLimit(2)
@@ -139,10 +139,44 @@ struct DriverTripCard: View {
                 Image(systemName: "mappin.circle.fill")
                     .foregroundColor(Theme.red)
                     .font(.system(size: 14))
-                Text(trip.dropoffLocation?.address ?? trip.rideRequest?.dropoffLocation?.address ?? "N/A")
+                Text(trip.displayDropoff)
                     .font(Theme.captionFont)
                     .foregroundColor(Theme.gray600)
                     .lineLimit(2)
+            }
+
+            // Navigate buttons
+            if trip.status.isActive {
+                HStack(spacing: 8) {
+                    let pickupAddr = trip.displayPickup == "N/A" ? "" : trip.displayPickup
+                    let dropoffAddr = trip.displayDropoff == "N/A" ? "" : trip.displayDropoff
+                    if !pickupAddr.isEmpty && (trip.status == .assigned || trip.status == .driverDeparted) {
+                        Button {
+                            if let url = URL(string: "http://maps.apple.com/?daddr=\(pickupAddr.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")") {
+                                UIApplication.shared.open(url)
+                            }
+                        } label: {
+                            Label("Navigate to Pickup", systemImage: "arrow.triangle.turn.up.right.circle.fill")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(Theme.green)
+                                .padding(.horizontal, 8).padding(.vertical, 6)
+                                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.green, lineWidth: 1))
+                        }
+                    }
+                    if !dropoffAddr.isEmpty && (trip.status == .arrivedPickup || trip.status == .inProgress) {
+                        Button {
+                            if let url = URL(string: "http://maps.apple.com/?daddr=\(dropoffAddr.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")") {
+                                UIApplication.shared.open(url)
+                            }
+                        } label: {
+                            Label("Navigate to Dropoff", systemImage: "arrow.triangle.turn.up.right.circle.fill")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(Theme.red)
+                                .padding(.horizontal, 8).padding(.vertical, 6)
+                                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.red, lineWidth: 1))
+                        }
+                    }
+                }
             }
 
             // Passenger phone
@@ -182,6 +216,7 @@ struct DriverTripCard: View {
 
     func statusButtonColor(for status: TripStatus) -> Color {
         switch status {
+        case .unassigned: return Theme.gray400
         case .assigned: return Theme.blue
         case .driverDeparted: return Theme.orange
         case .arrivedPickup: return Theme.primary

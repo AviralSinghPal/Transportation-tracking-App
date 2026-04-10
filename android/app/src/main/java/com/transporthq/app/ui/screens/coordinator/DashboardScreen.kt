@@ -321,7 +321,7 @@ private fun TripSummaryCard(trip: Trip) {
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = trip.pickupLocation?.address ?: trip.rideRequest?.pickupLocation?.address ?: "N/A",
+                    text = trip.displayPickup,
                     fontSize = 13.sp,
                     color = Gray600
                 )
@@ -336,7 +336,7 @@ private fun TripSummaryCard(trip: Trip) {
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = trip.dropoffLocation?.address ?: trip.rideRequest?.dropoffLocation?.address ?: "N/A",
+                    text = trip.displayDropoff,
                     fontSize = 13.sp,
                     color = Gray600
                 )
@@ -379,7 +379,7 @@ private fun PendingRideCard(ride: RideRequest) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = ride.passenger?.name ?: "Unknown Passenger",
+                    text = (ride.passenger ?: ride.requester)?.name ?: "Unknown Passenger",
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 15.sp,
                     color = Gray900
@@ -388,12 +388,12 @@ private fun PendingRideCard(ride: RideRequest) {
             }
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "From: ${ride.pickupLocation?.address ?: "N/A"}",
+                text = "From: ${ride.pickupLocation ?: "N/A"}",
                 fontSize = 13.sp,
                 color = Gray600
             )
             Text(
-                text = "To: ${ride.dropoffLocation?.address ?: "N/A"}",
+                text = "To: ${ride.dropoffLocation ?: "N/A"}",
                 fontSize = 13.sp,
                 color = Gray600
             )
