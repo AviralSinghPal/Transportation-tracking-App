@@ -1,5 +1,7 @@
 import Foundation
+import UIKit
 import Combine
+import UIKit
 
 @MainActor
 final class MyRidesViewModel: ObservableObject {
@@ -8,6 +10,9 @@ final class MyRidesViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var showCreateSheet = false
     @Published var createSuccess: String?
+    @Published var hasPADriver = false
+    @Published var paDriverName = ""
+    @Published var paDriverPhone = ""
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -26,6 +31,17 @@ final class MyRidesViewModel: ObservableObject {
                 Task { await self?.loadRides() }
             }
             .store(in: &cancellables)
+    }
+
+    func loadPADriver() async {
+        do {
+            let data = try await APIService.shared.getMyDriver()
+            if data.isAllocated == true, let driver = data.driver {
+                hasPADriver = true
+                paDriverName = driver.name ?? ""
+                paDriverPhone = driver.phone ?? ""
+            }
+        } catch { /* PA not available */ }
     }
 
     func loadRides() async {

@@ -20,8 +20,8 @@ final class AuthViewModel: ObservableObject {
 
     let demoAccounts: [DemoAccount] = [
         DemoAccount(label: "Coordinator", email: "coordinator@test.com", password: "password123", icon: "person.badge.shield.checkmark", color: Theme.primary),
-        DemoAccount(label: "Driver", email: "driver@test.com", password: "password123", icon: "car.fill", color: Theme.green),
-        DemoAccount(label: "Passenger", email: "passenger@test.com", password: "password123", icon: "person.fill", color: Theme.blue)
+        DemoAccount(label: "Driver", email: "driver1@test.com", password: "password123", icon: "car.fill", color: Theme.green),
+        DemoAccount(label: "Passenger", email: "actor1@test.com", password: "password123", icon: "person.fill", color: Theme.blue)
     ]
 
     func login() async {

@@ -14,11 +14,26 @@ import com.transporthq.app.data.repository.AuthRepository
 import com.transporthq.app.ui.components.BottomNavBar
 import com.transporthq.app.ui.components.TopBar
 import com.transporthq.app.ui.screens.coordinator.DashboardScreen
+import com.transporthq.app.ui.screens.coordinator.AnalyticsScreen
+import com.transporthq.app.ui.screens.coordinator.CreateTripScreen
+import com.transporthq.app.ui.screens.coordinator.MaintenanceScreen
+import com.transporthq.app.ui.screens.coordinator.ShuttlesScreen
+import com.transporthq.app.ui.screens.coordinator.TalentScreen
+import com.transporthq.app.ui.screens.coordinator.TemplatesScreen
+import com.transporthq.app.ui.screens.coordinator.DriversScreen
+import com.transporthq.app.ui.screens.coordinator.FleetScreen
+import com.transporthq.app.ui.screens.coordinator.PermanentAllocationsScreen
+import com.transporthq.app.ui.screens.coordinator.TripDetailScreen
 import com.transporthq.app.ui.screens.coordinator.LiveMapScreen
 import com.transporthq.app.ui.screens.coordinator.RideRequestsScreen
 import com.transporthq.app.ui.screens.coordinator.TripsScreen
+import com.transporthq.app.ui.screens.driver.DriverMapScreen
 import com.transporthq.app.ui.screens.driver.DriverMyRidesScreen
 import com.transporthq.app.ui.screens.driver.DriverMyTripsScreen
+import com.transporthq.app.ui.screens.common.ChatConversationScreen
+import com.transporthq.app.ui.screens.common.ChatScreen
+import com.transporthq.app.ui.screens.common.NotificationsScreen
+import com.transporthq.app.ui.screens.common.SettingsScreen
 import com.transporthq.app.ui.screens.login.LoginScreen
 import com.transporthq.app.ui.screens.login.LoginViewModel
 import com.transporthq.app.ui.screens.passenger.PassengerMyRidesScreen
@@ -87,7 +102,10 @@ fun AppNavigation() {
             topBar = {
                 TopBar(
                     title = "TransportHQ",
-                    onLogout = onLogout
+                    onLogout = onLogout,
+                    onNotifications = { navController.navigate("notifications") },
+                    onChat = { navController.navigate("chat") },
+                    onSettings = { navController.navigate("settings") }
                 )
             },
             bottomBar = {
@@ -102,15 +120,76 @@ fun AppNavigation() {
                 startDestination = startDestination,
                 modifier = Modifier.padding(paddingValues)
             ) {
+                // Common routes
+                composable("settings") {
+                    SettingsScreen(
+                        onLogout = onLogout,
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+                composable("notifications") {
+                    NotificationsScreen(onBack = { navController.popBackStack() })
+                }
+                composable("chat") {
+                    ChatScreen(
+                        onBack = { navController.popBackStack() },
+                        onOpenConversation = { userId, userName ->
+                            navController.navigate("chat/$userId/$userName")
+                        }
+                    )
+                }
+                composable("chat/{userId}/{userName}") { backStackEntry ->
+                    val userId = backStackEntry.arguments?.getString("userId") ?: ""
+                    val userName = backStackEntry.arguments?.getString("userName") ?: ""
+                    ChatConversationScreen(
+                        userId = userId, userName = userName,
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+
                 // Coordinator routes
                 composable("coordinator/dashboard") {
                     DashboardScreen()
                 }
                 composable("coordinator/trips") {
-                    TripsScreen()
+                    TripsScreen(
+                        onCreateTrip = { navController.navigate("coordinator/trips/create") },
+                        onTripClick = { tripId -> navController.navigate("coordinator/trips/$tripId") }
+                    )
+                }
+                composable("coordinator/trips/create") {
+                    CreateTripScreen(onBack = { navController.popBackStack() })
+                }
+                composable("coordinator/trips/{tripId}") { backStackEntry ->
+                    val tripId = backStackEntry.arguments?.getString("tripId") ?: ""
+                    TripDetailScreen(tripId = tripId, onBack = { navController.popBackStack() })
                 }
                 composable("coordinator/rides") {
                     RideRequestsScreen()
+                }
+                composable("coordinator/fleet") {
+                    FleetScreen()
+                }
+                composable("coordinator/drivers") {
+                    DriversScreen()
+                }
+                composable("coordinator/allocations") {
+                    PermanentAllocationsScreen()
+                }
+                composable("coordinator/analytics") {
+                    AnalyticsScreen()
+                }
+                composable("coordinator/maintenance") {
+                    MaintenanceScreen()
+                }
+                composable("coordinator/shuttles") {
+                    ShuttlesScreen()
+                }
+                composable("coordinator/templates") {
+                    TemplatesScreen()
+                }
+                composable("coordinator/talent") {
+                    TalentScreen()
                 }
                 composable("coordinator/map") {
                     LiveMapScreen()
@@ -122,6 +201,9 @@ fun AppNavigation() {
                 }
                 composable("driver/rides") {
                     DriverMyRidesScreen()
+                }
+                composable("driver/map") {
+                    DriverMapScreen()
                 }
 
                 // Passenger routes

@@ -8,6 +8,7 @@ struct Trip: Codable, Identifiable {
     let status: TripStatus
     let pickupLocation: TripLocation?
     let dropoffLocation: TripLocation?
+    let passengers: [TripPassengerStop]?
     let scheduledTime: String?
     let startTime: String?
     let endTime: String?
@@ -21,10 +22,41 @@ struct Trip: Codable, Identifiable {
     enum CodingKeys: String, CodingKey {
         case id = "_id"
         case rideRequest, driver, vehicle, status
-        case pickupLocation, dropoffLocation
+        case pickupLocation, dropoffLocation, passengers
         case scheduledTime, startTime, endTime, eta
         case currentLocation, distance, duration
         case createdAt, updatedAt
+    }
+
+    var displayPickup: String {
+        pickupLocation?.address
+            ?? rideRequest?.pickupLocation?.address
+            ?? passengers?.first?.pickupAddress
+            ?? "N/A"
+    }
+
+    var displayDropoff: String {
+        dropoffLocation?.address
+            ?? rideRequest?.dropoffLocation?.address
+            ?? passengers?.first?.dropoffAddress
+            ?? "N/A"
+    }
+}
+
+struct TripPassengerStop: Codable {
+    let id: String?
+    let name: String?
+    let phone: String?
+    let pickupAddress: String?
+    let dropoffAddress: String?
+    let pickupTime: String?
+    let dropoffTime: String?
+    let status: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id = "_id"
+        case name, phone, pickupAddress, dropoffAddress
+        case pickupTime, dropoffTime, status
     }
 }
 
@@ -45,6 +77,7 @@ struct TripRideRequest: Codable {
 
 struct TripPassenger: Codable {
     let id: String?
+    let name: String?
     let firstName: String?
     let lastName: String?
     let phone: String?
@@ -52,27 +85,30 @@ struct TripPassenger: Codable {
 
     enum CodingKeys: String, CodingKey {
         case id = "_id"
-        case firstName, lastName, phone, email
+        case name, firstName, lastName, phone, email
     }
 
     var fullName: String {
-        "\(firstName ?? "") \(lastName ?? "")".trimmingCharacters(in: .whitespaces)
+        if let name = name, !name.isEmpty { return name }
+        return "\(firstName ?? "") \(lastName ?? "")".trimmingCharacters(in: .whitespaces)
     }
 }
 
 struct TripDriver: Codable {
     let id: String?
+    let name: String?
     let firstName: String?
     let lastName: String?
     let phone: String?
 
     enum CodingKeys: String, CodingKey {
         case id = "_id"
-        case firstName, lastName, phone
+        case name, firstName, lastName, phone
     }
 
     var fullName: String {
-        "\(firstName ?? "") \(lastName ?? "")".trimmingCharacters(in: .whitespaces)
+        if let name = name, !name.isEmpty { return name }
+        return "\(firstName ?? "") \(lastName ?? "")".trimmingCharacters(in: .whitespaces)
     }
 }
 
@@ -120,6 +156,7 @@ struct GeoPoint: Codable {
 }
 
 enum TripStatus: String, Codable {
+    case unassigned
     case assigned
     case driverDeparted = "driver-departed"
     case arrivedPickup = "arrived-pickup"
@@ -129,6 +166,7 @@ enum TripStatus: String, Codable {
 
     var displayName: String {
         switch self {
+        case .unassigned: return "Unassigned"
         case .assigned: return "Assigned"
         case .driverDeparted: return "Driver Departed"
         case .arrivedPickup: return "Arrived at Pickup"
@@ -140,6 +178,7 @@ enum TripStatus: String, Codable {
 
     var nextStatus: TripStatus? {
         switch self {
+        case .unassigned: return nil
         case .assigned: return .driverDeparted
         case .driverDeparted: return .arrivedPickup
         case .arrivedPickup: return .inProgress
@@ -150,10 +189,11 @@ enum TripStatus: String, Codable {
 
     var nextStatusLabel: String? {
         switch self {
-        case .assigned: return "Depart for Pickup"
-        case .driverDeparted: return "Arrived at Pickup"
-        case .arrivedPickup: return "Start Trip"
-        case .inProgress: return "Complete Trip"
+        case .unassigned: return nil
+        case .assigned: return "I'm Departing Now"
+        case .driverDeparted: return "I've Arrived at Pickup"
+        case .arrivedPickup: return "Passenger Picked Up"
+        case .inProgress: return "Arrived at Destination"
         case .completed, .cancelled: return nil
         }
     }
@@ -165,5 +205,40 @@ enum TripStatus: String, Codable {
         default:
             return false
         }
+    }
+}
+
+struct TripDetailResponse: Codable {
+    let trip: Trip
+    let events: [TripEvent]?
+}
+
+struct TripResponse: Codable {
+    let trip: Trip
+}
+
+struct TripEvent: Codable, Identifiable {
+    let id: String
+    let trip: String?
+    let type: String?
+    let actor: TripEventActor?
+    let details: String?
+    let timestamp: String?
+    let createdAt: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id = "_id"
+        case trip, type, actor, details, timestamp, createdAt
+    }
+}
+
+struct TripEventActor: Codable {
+    let id: String?
+    let name: String?
+    let role: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id = "_id"
+        case name, role
     }
 }

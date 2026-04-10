@@ -17,9 +17,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.transporthq.app.data.models.CreateRideRequest
-import com.transporthq.app.data.models.LocationInfo
 import com.transporthq.app.ui.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RideRequestDialog(
     onDismiss: () -> Unit,
@@ -179,8 +179,8 @@ fun RideRequestDialog(
                             else pickupTime.replace(" ", "T") + ":00.000Z"
 
                             val request = CreateRideRequest(
-                                pickupLocation = LocationInfo(address = pickupAddress),
-                                dropoffLocation = LocationInfo(address = dropoffAddress),
+                                pickupLocation = pickupAddress,
+                                dropoffLocation = dropoffAddress,
                                 pickupTime = formattedTime,
                                 passengerCount = passengerCount.toIntOrNull() ?: 1,
                                 priority = priority,

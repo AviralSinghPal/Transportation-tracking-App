@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Application
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -107,10 +108,10 @@ private fun getNextStatus(currentStatus: String): String? {
 
 private fun getNextStatusLabel(currentStatus: String): String {
     return when (getNextStatus(currentStatus)) {
-        "driver-departed" -> "Depart"
-        "arrived-pickup" -> "Arrived at Pickup"
-        "in-progress" -> "Start Trip"
-        "completed" -> "Complete Trip"
+        "driver-departed" -> "I'm Departing Now"
+        "arrived-pickup" -> "I've Arrived at Pickup"
+        "in-progress" -> "Passenger Picked Up"
+        "completed" -> "Arrived at Destination"
         else -> ""
     }
 }
@@ -280,6 +281,7 @@ private fun DriverTripCard(
     trip: Trip,
     onUpdateStatus: (String) -> Unit
 ) {
+    val context = LocalContext.current
     val nextStatus = getNextStatus(trip.status)
     val nextLabel = getNextStatusLabel(trip.status)
     val isActive = trip.status in listOf("driver-departed", "arrived-pickup", "in-progress")
@@ -363,7 +365,7 @@ private fun DriverTripCard(
                 Icon(Icons.Default.TripOrigin, contentDescription = null, tint = Green600, modifier = Modifier.size(14.dp))
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = trip.pickupLocation?.address ?: trip.rideRequest?.pickupLocation?.address ?: "N/A",
+                    text = trip.displayPickup,
                     fontSize = 13.sp,
                     color = Gray700
                 )
@@ -373,10 +375,49 @@ private fun DriverTripCard(
                 Icon(Icons.Default.LocationOn, contentDescription = null, tint = Red500, modifier = Modifier.size(14.dp))
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = trip.dropoffLocation?.address ?: trip.rideRequest?.dropoffLocation?.address ?: "N/A",
+                    text = trip.displayDropoff,
                     fontSize = 13.sp,
                     color = Gray700
                 )
+            }
+
+            // Navigate buttons
+            if (isActive) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val pickupAddr = trip.displayPickup.takeIf { it != "N/A" } ?: ""
+                    val dropoffAddr = trip.displayDropoff.takeIf { it != "N/A" } ?: ""
+                    if (pickupAddr.isNotBlank() && trip.status in listOf("assigned", "driver-departed")) {
+                        OutlinedButton(
+                            onClick = {
+                                val uri = Uri.parse("google.navigation:q=${Uri.encode(pickupAddr)}")
+                                context.startActivity(Intent(Intent.ACTION_VIEW, uri).setPackage("com.google.android.apps.maps"))
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Navigation, contentDescription = null, modifier = Modifier.size(14.dp), tint = Green600)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Navigate to Pickup", fontSize = 11.sp, color = Green600)
+                        }
+                    }
+                    if (dropoffAddr.isNotBlank() && trip.status in listOf("arrived-pickup", "in-progress")) {
+                        OutlinedButton(
+                            onClick = {
+                                val uri = Uri.parse("google.navigation:q=${Uri.encode(dropoffAddr)}")
+                                context.startActivity(Intent(Intent.ACTION_VIEW, uri).setPackage("com.google.android.apps.maps"))
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Navigation, contentDescription = null, modifier = Modifier.size(14.dp), tint = Red500)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Navigate to Dropoff", fontSize = 11.sp, color = Red500)
+                        }
+                    }
+                }
             }
 
             // Vehicle
@@ -406,7 +447,7 @@ private fun DriverTripCard(
             // Status update button
             if (nextStatus != null && trip.status != "completed") {
                 Spacer(modifier = Modifier.height(14.dp))
-                HorizontalDivider(color = Gray200)
+                Divider(color = Gray200)
                 Spacer(modifier = Modifier.height(14.dp))
 
                 Button(

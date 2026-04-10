@@ -28,6 +28,13 @@ final class AuthService: ObservableObject {
             self.currentUser = user
             self.isAuthenticated = true
         }
+        // Check for auto-login trigger
+        if !isAuthenticated, let role = UserDefaults.standard.string(forKey: "auto_login_role") {
+            UserDefaults.standard.removeObject(forKey: "auto_login_role")
+            Task { @MainActor in
+                await self.autoLoginIfNeeded(role: role)
+            }
+        }
     }
 
     @MainActor
@@ -56,6 +63,21 @@ final class AuthService: ObservableObject {
     func restoreSession() {
         if let token = token, isAuthenticated {
             SocketService.shared.connect(token: token)
+        }
+    }
+
+    @MainActor
+    func autoLoginIfNeeded(role: String? = nil) async {
+        guard !isAuthenticated else { return }
+        if let role = role {
+            let email: String
+            switch role {
+            case "coordinator": email = "coordinator@test.com"
+            case "driver": email = "driver1@test.com"
+            case "actor", "passenger": email = "actor1@test.com"
+            default: return
+            }
+            try? await login(email: email, password: "password123")
         }
     }
 }

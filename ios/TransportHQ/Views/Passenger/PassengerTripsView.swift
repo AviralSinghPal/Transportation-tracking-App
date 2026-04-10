@@ -3,6 +3,9 @@ import SwiftUI
 struct PassengerTripsView: View {
     @State private var trips: [Trip] = []
     @State private var isLoading = false
+    @State private var showRatingSheet = false
+    @State private var ratingTripId: String? = nil
+    @State private var ratedTrips: Set<String> = []
 
     var activeTrips: [Trip] {
         trips.filter { $0.status != .completed && $0.status != .cancelled }
@@ -35,7 +38,48 @@ struct PassengerTripsView: View {
                             .padding(.top, 8)
 
                         ForEach(pastTrips) { trip in
-                            PassengerTripCard(trip: trip)
+                            VStack(spacing: 0) {
+                                PassengerTripCard(trip: trip)
+
+                                if trip.status == .completed {
+                                    if ratedTrips.contains(trip.id) {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "checkmark.circle.fill")
+                                                .font(.system(size: 12))
+                                                .foregroundColor(Theme.green)
+                                            Text("Rated")
+                                                .font(Theme.captionFont)
+                                                .foregroundColor(Theme.green)
+                                        }
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 8)
+                                        .background(Theme.green.opacity(0.08))
+                                        .cornerRadius(Theme.cornerRadiusSmall)
+                                        .padding(.horizontal, 16)
+                                        .padding(.top, -4)
+                                    } else {
+                                        Button {
+                                            ratingTripId = trip.id
+                                            showRatingSheet = true
+                                        } label: {
+                                            HStack(spacing: 4) {
+                                                Image(systemName: "star.fill")
+                                                    .font(.system(size: 12))
+                                                Text("Rate Trip")
+                                                    .font(Theme.captionFont)
+                                                    .fontWeight(.semibold)
+                                            }
+                                            .foregroundColor(.white)
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 8)
+                                            .background(Theme.primary)
+                                            .cornerRadius(Theme.cornerRadiusSmall)
+                                        }
+                                        .padding(.horizontal, 16)
+                                        .padding(.top, -4)
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -58,6 +102,13 @@ struct PassengerTripsView: View {
             .task {
                 await loadTrips()
             }
+            .sheet(isPresented: $showRatingSheet) {
+                if let tripId = ratingTripId {
+                    TripRatingSheet(tripId: tripId, onSubmit: {
+                        ratedTrips.insert(tripId)
+                    })
+                }
+            }
         }
     }
 
@@ -65,10 +116,23 @@ struct PassengerTripsView: View {
         isLoading = true
         do {
             trips = try await APIService.shared.getTrips()
+            await checkRatingsForCompletedTrips()
         } catch {
             print("Failed to load trips: \(error)")
         }
         isLoading = false
+    }
+
+    func checkRatingsForCompletedTrips() async {
+        let completedTrips = trips.filter { $0.status == .completed }
+        for trip in completedTrips {
+            do {
+                let result = try await APIService.shared.checkTripRating(tripId: trip.id)
+                if result.hasRated == true {
+                    ratedTrips.insert(trip.id)
+                }
+            } catch {}
+        }
     }
 }
 
@@ -100,7 +164,7 @@ struct PassengerTripCard: View {
                 Image(systemName: "mappin.circle.fill")
                     .foregroundColor(Theme.green)
                     .font(.system(size: 14))
-                Text(trip.pickupLocation?.address ?? trip.rideRequest?.pickupLocation?.address ?? "N/A")
+                Text(trip.displayPickup)
                     .font(Theme.captionFont)
                     .foregroundColor(Theme.gray600)
                     .lineLimit(1)
@@ -110,7 +174,7 @@ struct PassengerTripCard: View {
                 Image(systemName: "mappin.circle.fill")
                     .foregroundColor(Theme.red)
                     .font(.system(size: 14))
-                Text(trip.dropoffLocation?.address ?? trip.rideRequest?.dropoffLocation?.address ?? "N/A")
+                Text(trip.displayDropoff)
                     .font(Theme.captionFont)
                     .foregroundColor(Theme.gray600)
                     .lineLimit(1)

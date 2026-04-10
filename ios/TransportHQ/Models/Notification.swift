@@ -21,6 +21,10 @@ struct NotificationData: Codable {
     let driverId: String?
 }
 
+struct UnreadCountResponse: Codable {
+    let count: Int
+}
+
 struct DriverLocation: Identifiable {
     let id: String
     var lat: Double

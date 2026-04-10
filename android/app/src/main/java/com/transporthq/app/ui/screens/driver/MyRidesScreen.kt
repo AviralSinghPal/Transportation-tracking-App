@@ -142,7 +142,7 @@ private fun DriverRideCard(ride: RideRequest) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = ride.passenger?.name ?: "Unknown Passenger",
+                    text = (ride.passenger ?: ride.requester)?.name ?: "Unknown Passenger",
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 15.sp,
                     color = Gray900
@@ -153,13 +153,13 @@ private fun DriverRideCard(ride: RideRequest) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.TripOrigin, contentDescription = null, tint = Green600, modifier = Modifier.size(14.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(text = ride.pickupLocation?.address ?: "N/A", fontSize = 13.sp, color = Gray700)
+                Text(text = ride.pickupLocation ?: "N/A", fontSize = 13.sp, color = Gray700)
             }
             Spacer(modifier = Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.LocationOn, contentDescription = null, tint = Red500, modifier = Modifier.size(14.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(text = ride.dropoffLocation?.address ?: "N/A", fontSize = 13.sp, color = Gray700)
+                Text(text = ride.dropoffLocation ?: "N/A", fontSize = 13.sp, color = Gray700)
             }
             Spacer(modifier = Modifier.height(6.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {

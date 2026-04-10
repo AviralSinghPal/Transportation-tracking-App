@@ -29,6 +29,21 @@ object SocketManager {
     private val _notificationNew = MutableSharedFlow<String>(extraBufferCapacity = 16)
     val notificationNew: SharedFlow<String> = _notificationNew.asSharedFlow()
 
+    private val _tripCreated = MutableSharedFlow<String>(extraBufferCapacity = 16)
+    val tripCreated: SharedFlow<String> = _tripCreated.asSharedFlow()
+
+    private val _tripUpdated = MutableSharedFlow<String>(extraBufferCapacity = 16)
+    val tripUpdated: SharedFlow<String> = _tripUpdated.asSharedFlow()
+
+    private val _tripAssigned = MutableSharedFlow<String>(extraBufferCapacity = 16)
+    val tripAssigned: SharedFlow<String> = _tripAssigned.asSharedFlow()
+
+    private val _chatMessage = MutableSharedFlow<String>(extraBufferCapacity = 16)
+    val chatMessage: SharedFlow<String> = _chatMessage.asSharedFlow()
+
+    private val _driverOffline = MutableSharedFlow<String>(extraBufferCapacity = 16)
+    val driverOffline: SharedFlow<String> = _driverOffline.asSharedFlow()
+
     private val _connectionState = MutableSharedFlow<Boolean>(replay = 1, extraBufferCapacity = 4)
     val connectionState: SharedFlow<Boolean> = _connectionState.asSharedFlow()
 
@@ -102,6 +117,31 @@ object SocketManager {
                     } catch (e: Exception) {
                         Log.e(TAG, "Error parsing notification", e)
                     }
+                }
+
+                on("trip:created") { args ->
+                    try { _tripCreated.tryEmit(args[0].toString()) }
+                    catch (e: Exception) { Log.e(TAG, "Error parsing trip:created", e) }
+                }
+
+                on("trip:updated") { args ->
+                    try { _tripUpdated.tryEmit(args[0].toString()) }
+                    catch (e: Exception) { Log.e(TAG, "Error parsing trip:updated", e) }
+                }
+
+                on("trip:assigned") { args ->
+                    try { _tripAssigned.tryEmit(args[0].toString()) }
+                    catch (e: Exception) { Log.e(TAG, "Error parsing trip:assigned", e) }
+                }
+
+                on("chat:message") { args ->
+                    try { _chatMessage.tryEmit(args[0].toString()) }
+                    catch (e: Exception) { Log.e(TAG, "Error parsing chat:message", e) }
+                }
+
+                on("driver:offline") { args ->
+                    try { _driverOffline.tryEmit(args[0].toString()) }
+                    catch (e: Exception) { Log.e(TAG, "Error parsing driver:offline", e) }
                 }
 
                 connect()

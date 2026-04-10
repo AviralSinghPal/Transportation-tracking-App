@@ -3,6 +3,9 @@ import SwiftUI
 struct RideRequestsView: View {
     @StateObject private var viewModel = RideRequestsViewModel()
     @State private var selectedSegment = 0
+    @State private var showAddStopSheet = false
+    @State private var showAddPassengerSheet = false
+    @State private var selectedRideId: String? = nil
 
     let segments = ["Pending", "Approved", "Assigned", "History"]
 
@@ -30,6 +33,17 @@ struct RideRequestsView: View {
                                 },
                                 onAssign: {
                                     viewModel.beginAssign(request: request)
+                                },
+                                onReject: {
+                                    viewModel.beginReject(request: request)
+                                },
+                                onAddStop: {
+                                    selectedRideId = request.id
+                                    showAddStopSheet = true
+                                },
+                                onAddPassenger: {
+                                    selectedRideId = request.id
+                                    showAddPassengerSheet = true
                                 }
                             )
                         }
@@ -58,6 +72,18 @@ struct RideRequestsView: View {
             .sheet(isPresented: $viewModel.showAssignSheet) {
                 AssignSheet(viewModel: viewModel)
             }
+            .alert("Reject Ride Request", isPresented: $viewModel.showRejectAlert) {
+                TextField("Reason (optional)", text: $viewModel.rejectionReason)
+                Button("Cancel", role: .cancel) {
+                    viewModel.showRejectAlert = false
+                    viewModel.requestToReject = nil
+                }
+                Button("Reject", role: .destructive) {
+                    Task { await viewModel.reject() }
+                }
+            } message: {
+                Text("Reject ride from \(viewModel.requestToReject?.displayPassenger?.fullName ?? "this passenger")?")
+            }
             .overlay {
                 if let success = viewModel.actionSuccess {
                     SuccessToast(message: success)
@@ -66,6 +92,22 @@ struct RideRequestsView: View {
                                 viewModel.actionSuccess = nil
                             }
                         }
+                }
+            }
+            .sheet(isPresented: $showAddStopSheet) {
+                if let rideId = selectedRideId {
+                    AddStopSheet(rideId: rideId, onAdded: {
+                        showAddStopSheet = false
+                        Task { await viewModel.loadRideRequests() }
+                    })
+                }
+            }
+            .sheet(isPresented: $showAddPassengerSheet) {
+                if let rideId = selectedRideId {
+                    AddPassengerSheet(rideId: rideId, onAdded: {
+                        showAddPassengerSheet = false
+                        Task { await viewModel.loadRideRequests() }
+                    })
                 }
             }
         }
@@ -87,12 +129,15 @@ struct RideRequestCard: View {
     let showActions: Bool
     var onApprove: (() -> Void)?
     var onAssign: (() -> Void)?
+    var onReject: (() -> Void)?
+    var onAddStop: (() -> Void)?
+    var onAddPassenger: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(request.passenger?.fullName ?? "Unknown Passenger")
+                    Text(request.displayPassenger?.fullName ?? "Unknown Passenger")
                         .font(Theme.subheadlineFont)
                         .foregroundColor(Theme.gray900)
                     if let dept = request.department, !dept.isEmpty {
@@ -152,6 +197,19 @@ struct RideRequestCard: View {
                 HStack(spacing: 8) {
                     if request.status == .pending {
                         Button {
+                            onReject?()
+                        } label: {
+                            Text("Reject")
+                                .font(Theme.captionFont)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
+                                .background(Theme.red)
+                                .cornerRadius(6)
+                        }
+
+                        Button {
                             onApprove?()
                         } label: {
                             Text("Approve")
@@ -178,6 +236,35 @@ struct RideRequestCard: View {
                                 .background(Theme.primary)
                                 .cornerRadius(6)
                         }
+                    }
+                }
+            }
+
+            // Shared ride actions for assigned/in-progress rides
+            if request.status == .assigned || request.status == .inProgress {
+                HStack(spacing: 8) {
+                    Button {
+                        onAddStop?()
+                    } label: {
+                        Label("Add Stop", systemImage: "mappin.and.ellipse")
+                            .font(Theme.captionFont)
+                            .fontWeight(.semibold)
+                            .foregroundColor(Theme.primary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.primary, lineWidth: 1))
+                    }
+
+                    Button {
+                        onAddPassenger?()
+                    } label: {
+                        Label("Add Passenger", systemImage: "person.badge.plus")
+                            .font(Theme.captionFont)
+                            .fontWeight(.semibold)
+                            .foregroundColor(Theme.primary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.primary, lineWidth: 1))
                     }
                 }
             }
@@ -213,7 +300,7 @@ struct AssignSheet: View {
             Form {
                 if let request = viewModel.selectedRequest {
                     Section("Request") {
-                        Text(request.passenger?.fullName ?? "Unknown")
+                        Text(request.displayPassenger?.fullName ?? "Unknown")
                         Text(request.pickupLocation?.address ?? "N/A")
                         Text(request.dropoffLocation?.address ?? "N/A")
                     }
@@ -267,6 +354,146 @@ struct AssignSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
+            }
+        }
+    }
+}
+
+struct AddStopSheet: View {
+    let rideId: String
+    let onAdded: () -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var address: String = ""
+    @State private var isSubmitting = false
+    @State private var errorMessage: String?
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 20) {
+                Text("Add a Stop")
+                    .font(Theme.headlineFont)
+                    .foregroundColor(Theme.gray900)
+
+                TextField("Stop address", text: $address)
+                    .textFieldStyle(.roundedBorder)
+                    .padding(.horizontal)
+
+                if let error = errorMessage {
+                    Text(error)
+                        .font(Theme.captionFont)
+                        .foregroundColor(Theme.red)
+                }
+
+                Button {
+                    submitStop()
+                } label: {
+                    if isSubmitting {
+                        ProgressView().frame(maxWidth: .infinity)
+                    } else {
+                        Text("Add Stop")
+                            .fontWeight(.semibold)
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                .disabled(address.isEmpty || isSubmitting)
+                .padding(.horizontal)
+
+                Spacer()
+            }
+            .padding(.top, 24)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+            }
+        }
+    }
+
+    private func submitStop() {
+        isSubmitting = true
+        errorMessage = nil
+        Task {
+            do {
+                let body: [String: Any] = ["address": address]
+                _ = try await APIService.shared.addRideStop(id: rideId, body: body)
+                onAdded()
+            } catch {
+                errorMessage = error.localizedDescription
+                isSubmitting = false
+            }
+        }
+    }
+}
+
+struct AddPassengerSheet: View {
+    let rideId: String
+    let onAdded: () -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var name: String = ""
+    @State private var phone: String = ""
+    @State private var isSubmitting = false
+    @State private var errorMessage: String?
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 20) {
+                Text("Add a Passenger")
+                    .font(Theme.headlineFont)
+                    .foregroundColor(Theme.gray900)
+
+                TextField("Passenger name", text: $name)
+                    .textFieldStyle(.roundedBorder)
+                    .padding(.horizontal)
+
+                TextField("Phone number", text: $phone)
+                    .textFieldStyle(.roundedBorder)
+                    .keyboardType(.phonePad)
+                    .padding(.horizontal)
+
+                if let error = errorMessage {
+                    Text(error)
+                        .font(Theme.captionFont)
+                        .foregroundColor(Theme.red)
+                }
+
+                Button {
+                    submitPassenger()
+                } label: {
+                    if isSubmitting {
+                        ProgressView().frame(maxWidth: .infinity)
+                    } else {
+                        Text("Add Passenger")
+                            .fontWeight(.semibold)
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                .disabled(name.isEmpty || isSubmitting)
+                .padding(.horizontal)
+
+                Spacer()
+            }
+            .padding(.top, 24)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+            }
+        }
+    }
+
+    private func submitPassenger() {
+        isSubmitting = true
+        errorMessage = nil
+        Task {
+            do {
+                let body: [String: Any] = ["name": name, "phone": phone]
+                _ = try await APIService.shared.addRidePassenger(id: rideId, body: body)
+                onAdded()
+            } catch {
+                errorMessage = error.localizedDescription
+                isSubmitting = false
             }
         }
     }

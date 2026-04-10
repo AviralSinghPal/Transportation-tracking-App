@@ -1,5 +1,7 @@
 import Foundation
+import UIKit
 import Combine
+import UIKit
 
 @MainActor
 final class RideRequestsViewModel: ObservableObject {
@@ -14,6 +16,9 @@ final class RideRequestsViewModel: ObservableObject {
     @Published var selectedVehicleId: String = ""
     @Published var eta: String = ""
     @Published var actionSuccess: String?
+    @Published var showRejectAlert = false
+    @Published var rejectionReason = ""
+    @Published var requestToReject: RideRequest?
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -93,6 +98,27 @@ final class RideRequestsViewModel: ObservableObject {
         }
     }
 
+    func beginReject(request: RideRequest) {
+        requestToReject = request
+        rejectionReason = ""
+        showRejectAlert = true
+    }
+
+    func reject() async {
+        guard let request = requestToReject else { return }
+        do {
+            _ = try await APIService.shared.rejectRideRequest(id: request.id, reason: rejectionReason)
+            triggerHaptic()
+            showRejectAlert = false
+            requestToReject = nil
+            rejectionReason = ""
+            actionSuccess = "Ride request rejected"
+            await loadRideRequests()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     func beginAssign(request: RideRequest) {
         selectedRequest = request
         selectedDriverId = ""
@@ -113,7 +139,7 @@ final class RideRequestsViewModel: ObservableObject {
                 id: request.id,
                 driverId: selectedDriverId,
                 vehicleId: selectedVehicleId,
-                eta: eta.isEmpty ? nil : eta
+                eta: Int(eta) ?? 15
             )
             triggerHaptic()
             showAssignSheet = false

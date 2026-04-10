@@ -17,6 +17,9 @@ final class SocketService: ObservableObject {
     let rideRequestNewSubject = PassthroughSubject<Void, Never>()
     let rideRequestUpdatedSubject = PassthroughSubject<String, Never>()
     let notificationSubject = PassthroughSubject<AppNotification, Never>()
+    let chatMessageSubject = PassthroughSubject<Void, Never>()
+    let tripCreatedSubject = PassthroughSubject<Void, Never>()
+    let tripUpdatedSubject = PassthroughSubject<Void, Never>()
 
     private init() {}
 
@@ -143,6 +146,18 @@ final class SocketService: ObservableObject {
                     self?.notificationSubject.send(notification)
                 }
             }
+        }
+
+        socket?.on("chat:message") { [weak self] _, _ in
+            DispatchQueue.main.async { self?.chatMessageSubject.send() }
+        }
+
+        socket?.on("trip:created") { [weak self] _, _ in
+            DispatchQueue.main.async { self?.tripCreatedSubject.send() }
+        }
+
+        socket?.on("trip:updated") { [weak self] _, _ in
+            DispatchQueue.main.async { self?.tripUpdatedSubject.send() }
         }
     }
 

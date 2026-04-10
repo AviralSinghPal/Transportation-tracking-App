@@ -19,7 +19,7 @@ data class LoginRequest(
 )
 
 data class LoginResponse(
-    val token: String,
+    @SerializedName("accessToken") val token: String,
     val user: User
 )
 

@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -19,6 +20,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.transporthq.app.data.api.RetrofitClient
 import com.transporthq.app.data.models.Trip
 import com.transporthq.app.data.repository.TripRepository
 import com.transporthq.app.ui.components.StatusBadge
@@ -31,7 +33,10 @@ import kotlinx.coroutines.launch
 data class PassengerTripsState(
     val trips: List<Trip> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val ratedTrips: Set<String> = emptySet(),
+    val showRatingDialog: String? = null,
+    val ratingSubmitting: Boolean = false
 )
 
 class PassengerTripsViewModel(application: Application) : AndroidViewModel(application) {
@@ -51,11 +56,56 @@ class PassengerTripsViewModel(application: Application) : AndroidViewModel(appli
             result.fold(
                 onSuccess = { trips ->
                     _state.value = _state.value.copy(trips = trips, isLoading = false)
+                    checkRatings()
                 },
                 onFailure = { error ->
                     _state.value = _state.value.copy(isLoading = false, error = error.message)
                 }
             )
+        }
+    }
+
+    fun checkRatings() {
+        viewModelScope.launch {
+            val completedTrips = _state.value.trips.filter { it.status == "completed" }
+            val rated = mutableSetOf<String>()
+            for (trip in completedTrips) {
+                try {
+                    val response = RetrofitClient.apiService.checkTripRating(trip.id)
+                    if (response.isSuccessful) {
+                        val body = response.body()
+                        if (body != null && body.hasRated) {
+                            rated.add(trip.id)
+                        }
+                    }
+                } catch (_: Exception) {}
+            }
+            _state.value = _state.value.copy(ratedTrips = rated)
+        }
+    }
+
+    fun showRatingDialog(tripId: String) {
+        _state.value = _state.value.copy(showRatingDialog = tripId)
+    }
+
+    fun dismissRatingDialog() {
+        _state.value = _state.value.copy(showRatingDialog = null)
+    }
+
+    fun submitRating(tripId: String, rating: Int, comment: String) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(ratingSubmitting = true)
+            try {
+                val body = mapOf("tripId" to tripId, "rating" to rating, "comment" to comment, "type" to "trip")
+                RetrofitClient.apiService.submitRating(body)
+                _state.value = _state.value.copy(
+                    ratedTrips = _state.value.ratedTrips + tripId,
+                    showRatingDialog = null,
+                    ratingSubmitting = false
+                )
+            } catch (_: Exception) {
+                _state.value = _state.value.copy(ratingSubmitting = false)
+            }
         }
     }
 }
@@ -121,15 +171,28 @@ fun PassengerMyTripsScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(state.trips) { trip ->
-                    PassengerTripCard(trip)
+                    PassengerTripCard(
+                        trip = trip,
+                        hasRated = trip.id in state.ratedTrips,
+                        onRate = { viewModel.showRatingDialog(trip.id) }
+                    )
                 }
             }
         }
     }
+
+    // Rating dialog
+    state.showRatingDialog?.let { tripId ->
+        RatingDialog(
+            onSubmit = { rating, comment -> viewModel.submitRating(tripId, rating, comment) },
+            onDismiss = { viewModel.dismissRatingDialog() },
+            isSubmitting = state.ratingSubmitting
+        )
+    }
 }
 
 @Composable
-private fun PassengerTripCard(trip: Trip) {
+private fun PassengerTripCard(trip: Trip, hasRated: Boolean = false, onRate: () -> Unit = {}) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -173,7 +236,7 @@ private fun PassengerTripCard(trip: Trip) {
                 Icon(Icons.Default.TripOrigin, contentDescription = null, tint = Green600, modifier = Modifier.size(14.dp))
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = trip.pickupLocation?.address ?: trip.rideRequest?.pickupLocation?.address ?: "N/A",
+                    text = trip.displayPickup,
                     fontSize = 13.sp,
                     color = Gray700
                 )
@@ -183,7 +246,7 @@ private fun PassengerTripCard(trip: Trip) {
                 Icon(Icons.Default.LocationOn, contentDescription = null, tint = Red500, modifier = Modifier.size(14.dp))
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = trip.dropoffLocation?.address ?: trip.rideRequest?.dropoffLocation?.address ?: "N/A",
+                    text = trip.displayDropoff,
                     fontSize = 13.sp,
                     color = Gray700
                 )
@@ -201,6 +264,90 @@ private fun PassengerTripCard(trip: Trip) {
                     )
                 }
             }
+
+            if (trip.status == "completed") {
+                Spacer(modifier = Modifier.height(8.dp))
+                Divider(color = Gray200)
+                Spacer(modifier = Modifier.height(8.dp))
+                if (hasRated) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Green600, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Rated", fontSize = 13.sp, color = Green600, fontWeight = FontWeight.Medium)
+                    }
+                } else {
+                    OutlinedButton(
+                        onClick = onRate,
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Indigo600)
+                    ) {
+                        Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Rate Trip", fontSize = 13.sp)
+                    }
+                }
+            }
         }
     }
+}
+
+@Composable
+private fun RatingDialog(
+    onSubmit: (Int, String) -> Unit,
+    onDismiss: () -> Unit,
+    isSubmitting: Boolean = false
+) {
+    var rating by remember { mutableIntStateOf(0) }
+    var comment by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Rate Your Trip", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("How was your ride?", fontSize = 14.sp, color = Gray600)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    (1..5).forEach { star ->
+                        IconButton(onClick = { rating = star }) {
+                            Icon(
+                                if (star <= rating) Icons.Default.Star else Icons.Default.StarBorder,
+                                contentDescription = "Star $star",
+                                tint = if (star <= rating) Amber500 else Gray400,
+                                modifier = Modifier.size(36.dp)
+                            )
+                        }
+                    }
+                }
+                OutlinedTextField(
+                    value = comment,
+                    onValueChange = { comment = it },
+                    label = { Text("Comment (optional)") },
+                    placeholder = { Text("Share your experience...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    minLines = 2,
+                    maxLines = 4
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onSubmit(rating, comment) },
+                enabled = rating > 0 && !isSubmitting,
+                colors = ButtonDefaults.buttonColors(containerColor = Indigo600),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                if (isSubmitting) CircularProgressIndicator(modifier = Modifier.size(16.dp), color = White)
+                else Text("Submit")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel", color = Gray500) }
+        },
+        shape = RoundedCornerShape(16.dp)
+    )
 }

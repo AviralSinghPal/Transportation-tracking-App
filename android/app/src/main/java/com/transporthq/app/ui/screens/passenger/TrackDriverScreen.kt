@@ -64,7 +64,7 @@ class TrackDriverViewModel(application: Application) : AndroidViewModel(applicat
                         isLoading = false
                     )
                     // Start tracking the assigned driver
-                    ride.assignedDriver?.let { driver ->
+                    ride.displayDriver?.let { driver ->
                         SocketManager.trackDriver(driver.id)
                     }
                 },
@@ -79,7 +79,7 @@ class TrackDriverViewModel(application: Application) : AndroidViewModel(applicat
         viewModelScope.launch {
             SocketManager.driverLocationUpdates.collect { location ->
                 val ride = _state.value.rideRequest
-                if (ride?.assignedDriver != null && location.driverId == ride.assignedDriver.id) {
+                if (ride?.displayDriver != null && location.driverId == ride.displayDriver!!.id) {
                     _state.value = _state.value.copy(driverLocation = location)
                 }
             }
@@ -187,32 +187,15 @@ fun TrackDriverScreen(
                     state.driverLocation?.let { loc ->
                         Marker(
                             state = MarkerState(position = LatLng(loc.lat, loc.lng)),
-                            title = state.rideRequest?.assignedDriver?.name ?: "Driver",
+                            title = state.rideRequest?.displayDriver?.name ?: "Driver",
                             snippet = "Speed: ${String.format("%.1f", loc.speed)} km/h",
                             icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE),
                             rotation = loc.heading.toFloat()
                         )
                     }
 
-                    // Pickup marker
-                    state.rideRequest?.pickupLocation?.coordinates?.let { coords ->
-                        Marker(
-                            state = MarkerState(position = LatLng(coords.lat, coords.lng)),
-                            title = "Pickup",
-                            snippet = state.rideRequest?.pickupLocation?.address,
-                            icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
-                        )
-                    }
-
-                    // Dropoff marker
-                    state.rideRequest?.dropoffLocation?.coordinates?.let { coords ->
-                        Marker(
-                            state = MarkerState(position = LatLng(coords.lat, coords.lng)),
-                            title = "Dropoff",
-                            snippet = state.rideRequest?.dropoffLocation?.address,
-                            icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
-                        )
-                    }
+                    // Pickup/dropoff locations are address strings without coordinates.
+                    // Markers for these locations will appear when the server provides coordinate data.
                 }
 
                 // Live tracking indicator
@@ -287,13 +270,13 @@ fun TrackDriverScreen(
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Column {
                                         Text(
-                                            text = ride.assignedDriver?.name ?: "Driver",
+                                            text = ride.displayDriver?.name ?: "Driver",
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 16.sp,
                                             color = Gray900
                                         )
                                         Text(
-                                            text = ride.assignedDriver?.phone ?: "",
+                                            text = ride.displayDriver?.phone ?: "",
                                             fontSize = 13.sp,
                                             color = Gray500
                                         )
@@ -303,7 +286,7 @@ fun TrackDriverScreen(
                             }
 
                             Spacer(modifier = Modifier.height(12.dp))
-                            HorizontalDivider(color = Gray200)
+                            Divider(color = Gray200)
                             Spacer(modifier = Modifier.height(12.dp))
 
                             // Speed info
@@ -359,7 +342,7 @@ fun TrackDriverScreen(
                                 Icon(Icons.Default.TripOrigin, contentDescription = null, tint = Green600, modifier = Modifier.size(12.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = ride.pickupLocation?.address ?: "N/A",
+                                    text = ride.pickupLocation ?: "N/A",
                                     fontSize = 12.sp,
                                     color = Gray600,
                                     maxLines = 1
@@ -370,7 +353,7 @@ fun TrackDriverScreen(
                                 Icon(Icons.Default.LocationOn, contentDescription = null, tint = Red500, modifier = Modifier.size(12.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = ride.dropoffLocation?.address ?: "N/A",
+                                    text = ride.dropoffLocation ?: "N/A",
                                     fontSize = 12.sp,
                                     color = Gray600,
                                     maxLines = 1

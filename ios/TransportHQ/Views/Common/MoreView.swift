@@ -34,6 +34,52 @@ struct MoreView: View {
                     }
                 }
 
+                // Quick Access (Coordinator)
+                if authService.currentUser?.role == .coordinator {
+                    Section("Tools") {
+                        NavigationLink {
+                            FleetView()
+                        } label: {
+                            Label("Fleet Management", systemImage: "car.2.fill")
+                        }
+                        NavigationLink {
+                            DriversView()
+                        } label: {
+                            Label("Driver Management", systemImage: "person.2.fill")
+                        }
+                        NavigationLink {
+                            PermanentAllocationsView()
+                        } label: {
+                            Label("Permanent Allocations", systemImage: "repeat")
+                        }
+                        NavigationLink {
+                            AnalyticsView()
+                        } label: {
+                            Label("Insights & Reports", systemImage: "chart.bar.fill")
+                        }
+                        NavigationLink {
+                            MaintenanceView()
+                        } label: {
+                            Label("Maintenance", systemImage: "wrench.and.screwdriver.fill")
+                        }
+                        NavigationLink {
+                            ShuttlesView()
+                        } label: {
+                            Label("Shuttle Routes", systemImage: "bus.fill")
+                        }
+                        NavigationLink {
+                            TemplatesView()
+                        } label: {
+                            Label("Templates", systemImage: "doc.on.doc.fill")
+                        }
+                        NavigationLink {
+                            TalentView()
+                        } label: {
+                            Label("Talent Profiles", systemImage: "star.fill")
+                        }
+                    }
+                }
+
                 // Connection Status
                 Section("Connection") {
                     HStack {

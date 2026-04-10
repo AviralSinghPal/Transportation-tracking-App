@@ -272,7 +272,7 @@ fun LiveMapScreen(
                             Icon(Icons.Default.Close, contentDescription = "Close", modifier = Modifier.size(20.dp))
                         }
                     }
-                    HorizontalDivider(color = Gray200)
+                    Divider(color = Gray200)
                     LazyColumn {
                         items(state.drivers) { driver ->
                             DriverListItem(

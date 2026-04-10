@@ -23,11 +23,13 @@ fun getNavItemsForRole(role: String): List<BottomNavItem> {
             BottomNavItem("Dashboard", Icons.Default.Dashboard, "coordinator/dashboard"),
             BottomNavItem("Trips", Icons.Default.DirectionsCar, "coordinator/trips"),
             BottomNavItem("Rides", Icons.Default.ListAlt, "coordinator/rides"),
+            BottomNavItem("Fleet", Icons.Default.LocalShipping, "coordinator/fleet"),
             BottomNavItem("Map", Icons.Default.Map, "coordinator/map")
         )
         "driver" -> listOf(
             BottomNavItem("My Trips", Icons.Default.DirectionsCar, "driver/trips"),
-            BottomNavItem("My Rides", Icons.Default.ListAlt, "driver/rides")
+            BottomNavItem("My Rides", Icons.Default.ListAlt, "driver/rides"),
+            BottomNavItem("Map", Icons.Default.Map, "driver/map")
         )
         "passenger" -> listOf(
             BottomNavItem("My Trips", Icons.Default.DirectionsCar, "passenger/trips"),

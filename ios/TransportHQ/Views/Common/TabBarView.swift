@@ -18,6 +18,7 @@ struct TabBarView: View {
             return [
                 ("My Trips", "road.lanes"),
                 ("My Rides", "car.fill"),
+                ("Map", "map.fill"),
                 ("More", "ellipsis")
             ]
         case .passenger:
