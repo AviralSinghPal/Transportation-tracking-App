@@ -1,0 +1,61 @@
+name: TransportHQ
+options:
+  bundleIdPrefix: com.transporthq
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "16.4"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    INFOPLIST_FILE: Info.plist
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+
+packages:
+  SocketIO:
+    url: https://github.com/socketio/socket.io-client-swift.git
+    from: "16.1.0"
+
+targets:
+  TransportHQ:
+    type: application
+    platform: iOS
+    sources:
+      - path: .
+        excludes:
+          - ".build/**"
+          - ".swiftpm/**"
+          - "Package.swift"
+          - "Package.resolved"
+          - "project.yml"
+          - "*.xcodeproj/**"
+          - "*.xcworkspace/**"
+    dependencies:
+      - package: SocketIO
+        product: SocketIO
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.transporthq.ios
+        PRODUCT_NAME: TransportHQ
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_FILE: Info.plist
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "TransportHQ needs your location to track driver positions"
+        INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription: "TransportHQ needs your location for background tracking"
+    info:
+      path: Info.plist
+      properties:
+        UIBackgroundModes:
+          - location
+          - fetch
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+        NSLocationWhenInUseUsageDescription: "TransportHQ needs your location to track driver positions"
+        NSLocationAlwaysAndWhenInUseUsageDescription: "TransportHQ needs your location for background tracking"
